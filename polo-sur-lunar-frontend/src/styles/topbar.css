@@ -1,0 +1,148 @@
+/* ───────── Barra superior ───────── */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-family: var(--font-tech);
+  font-weight: 800;
+  font-size: 24px;
+  letter-spacing: 0.08em;
+}
+
+.logo small {
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: var(--c-01);
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-tech);
+  font-size: 9.5px;
+  letter-spacing: 0.14em;
+  color: var(--text-dim);
+}
+
+.nav button {
+  padding: 8px 4px;
+  letter-spacing: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  transition: color 0.2s;
+}
+
+.nav button:hover {
+  color: var(--text);
+}
+
+.nav button[aria-current="page"] {
+  color: var(--text);
+  padding: 11px 30px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+}
+
+.top-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.icon-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--glass-2);
+}
+
+.icon-btn:hover {
+  background: var(--glass-3);
+}
+
+.icon-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.badge {
+  position: absolute;
+  top: -4px;
+  right: -3px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 2px;
+  background: var(--c-02);
+  font-size: 9px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-01), var(--c-02));
+  margin-left: 4px;
+}
+
+.popover {
+  position: absolute;
+  top: 70px;
+  right: 26px;
+  z-index: 30;
+  width: 330px;
+  max-height: calc(100vh - 96px);
+  overflow: auto;
+}
+
+.popover .panel {
+  background: #050505;
+}
+
+.popover.bell {
+  width: 300px;
+  padding: 16px 18px;
+  border-radius: 2px;
+  background: #050505;
+}
+
+.popover.bell ul {
+  list-style: none;
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.popover.bell li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  padding: 8px 10px;
+  border-radius: 2px;
+  background: var(--glass);
+}
+
+.popover.bell li span {
+  color: var(--text-dim);
+}

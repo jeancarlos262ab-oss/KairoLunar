@@ -1,0 +1,93 @@
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500;600&display=swap");
+
+/* Nasalization (Typodermic) — solo para títulos y cifras destacadas.
+   Archivo: public/fonts/Nasalization-Rg.otf */
+@font-face {
+  font-family: "Nasalization";
+  src: local("Nasalization Rg"), local("Nasalization"),
+       url("/fonts/Nasalization-Rg.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+:root {
+  /* Paleta base del style guide */
+  --c-01: #ffffff;
+  --c-02: #6889f7;
+  --c-03: #000000;
+  --c-04: #ffffff;
+
+  /* Colores semánticos */
+  --sun: #ffc857;
+  --sun-soft: #ffe29a;
+  --earth: #6889f7;
+  --earth-soft: #89e5fc;
+
+  --bg: #000000;
+  --surface: #000000;
+  --surface-2: #0b0b0b;
+  --surface-3: #141414;
+  --line: rgba(255, 255, 255, 0.16);
+  --line-soft: rgba(255, 255, 255, 0.08);
+  --nasa-red: #fc3d21;
+  --glass: #070707; /* contenedores: solo transparencia, sin bordes ni sombras */
+  --glass-2: #0f0f0f;
+  --glass-3: #1a1a1a;
+  --text: #f5f5f5;
+  --text-dim: rgba(245, 245, 245, 0.66);
+  --text-faint: rgba(245, 245, 245, 0.42);
+
+  --font-body: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-tech: "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: "Nasalization", "Archivo", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: #000;
+}
+
+html {
+  color-scheme: dark;
+  background-color: #000;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Si una imagen falla (p. ej. un recurso que no existe en /public), no mostrar el ícono roto */
+img:not([src]),
+img[src=""] {
+  display: none;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+  border: none;
+  outline: none;
+}
+
+button {
+  background: none;
+  cursor: pointer;
+}

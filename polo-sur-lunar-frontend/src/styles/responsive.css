@@ -1,0 +1,71 @@
+/* ───────── Responsive ───────── */
+@media (max-width: 1180px) {
+  .app {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto;
+  }
+
+  .nav {
+    position: static;
+    transform: none;
+    gap: 12px;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .globe-layer {
+    position: relative;
+    grid-column: 1;
+    height: 420px;
+  }
+
+  .main-left,
+  .main-mid,
+  .main-right,
+  .bottom {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .main-left {
+    min-height: 0;
+  }
+
+  .bottom {
+    grid-template-columns: 1fr;
+  }
+
+  .sat-card {
+    min-height: 190px;
+  }
+
+  .bars {
+    min-height: 130px;
+  }
+
+  .sat-card small {
+    text-shadow: none;
+    color: var(--text);
+  }
+
+  .detail-body.cols-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .learn-cards,
+  .learn-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .popover {
+    right: 16px;
+    left: 16px;
+    width: auto;
+  }
+}

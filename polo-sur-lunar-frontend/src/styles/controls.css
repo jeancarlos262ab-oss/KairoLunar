@@ -1,0 +1,40 @@
+/* ───────── Chips y botones ───────── */
+.chip {
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 5px 11px;
+  border-radius: 2px;
+  background: var(--glass-2);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.chip.sun {
+  background: rgba(255, 200, 87, 0.18);
+  color: var(--sun-soft);
+}
+
+.chip.earth {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--earth-soft);
+}
+
+.pill-btn {
+  font-family: var(--font-tech);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  padding: 8px 16px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--c-01);
+  transition: background 0.15s;
+}
+
+.pill-btn:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.pill-btn.wide {
+  width: 100%;
+  margin-top: 8px;
+}

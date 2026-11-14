@@ -1,0 +1,12 @@
+/* ═════════ Rendimiento ═════════ */
+.hero-stack { contain: layout paint; }
+.hero-stack canvas { will-change: transform; }
+.globe-layer { contain: layout paint; }
+.radar-sweep { will-change: transform; }
+/* Las secciones fuera de pantalla no se pintan hasta que se acercan (Aprender, tablas, gráficos largos) */
+.learn-card, .faq, .glossary, .plan-list, .table-wrap { content-visibility: auto; contain-intrinsic-size: auto 200px; }
+@media (prefers-reduced-motion: reduce) { .verdict-kicker::before, .radar-sweep { animation: none; } }
+@media (max-width: 1180px) {
+  /* Más ligero en móvil: sin pulsos infinitos */
+  .verdict-kicker::before { animation: none; }
+}

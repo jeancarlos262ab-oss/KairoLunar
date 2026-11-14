@@ -1,0 +1,114 @@
+/* ═════════ Home en 2 columnas: globo a la izquierda, todos los contenedores a la derecha ═════════ */
+@media (min-width: 1181px) {
+  .app:not(.detail) {
+    grid-template-columns: minmax(0, 1fr) 440px;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .app:not(.detail) .globe-layer { right: 456px; } /* 440 + hueco */
+  html[data-focus] .app:not(.detail) .globe-layer { right: 0; }
+
+  .app:not(.detail) .main-left { grid-column: 1; grid-row: 2; }
+
+  .side {
+    position: relative;
+    z-index: 1;
+    grid-column: 2;
+    grid-row: 2;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  }
+  .side > * { flex: none; }
+
+  .side .main-mid {
+    grid-column: auto;
+    grid-row: auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .side .main-mid > * { min-width: 0; }
+
+  .side .main-right {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .side .sat-card { flex: none; height: 210px; }
+
+  .side .bottom {
+    grid-column: auto;
+    grid-row: auto;
+    grid-template-columns: 1fr;
+  }
+  .side .bottom .card { min-height: 190px; }
+}
+
+/* Control de tiempo (izquierda) y barra de preguntas / botones (derecha) en una sola línea */
+@media (min-width: 1181px) {
+  .app:not(.detail) .main-left {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-content: end;
+    align-items: end;
+    gap: 12px;
+  }
+  .app:not(.detail) .main-left .verdict { position: absolute; top: 0; left: 0; width: 380px; max-width: 100%; }
+  .app:not(.detail) .main-left .explore { grid-column: 1 / -1; justify-self: center; }
+  .app:not(.detail) .main-left .scrubber,
+  .app:not(.detail) .main-left .ask {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    align-self: end;
+    height: 64px;
+  }
+  .app:not(.detail) .main-left .scrubber { grid-column: 1; }
+  .app:not(.detail) .main-left .ask { grid-column: 2; }
+  .app:not(.detail) .main-left .ask input { min-width: 0; text-overflow: ellipsis; }
+  /* en pantalla completa solo queda el control de tiempo */
+  html[data-focus] .app:not(.detail) .main-left { grid-template-columns: minmax(0, 520px); }
+}
+
+/* Vistas secundarias: la barra de navegación queda fija y el scroll ocurre solo dentro de la página */
+@media (min-width: 1181px) {
+  .app.detail {
+    height: 100vh;
+    min-height: 0;
+    overflow: hidden;
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .app.detail .detail-body {
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 6px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  }
+}
+
+/* Desvanecido de los bordes según la posición del scroll (ver lib/scrollFade.ts) */
+@property --fade-top { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --fade-bottom { syntax: "<length>"; inherits: false; initial-value: 0px; }
+
+.detail-body,
+.side {
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+}
+/* La máscara solo existe mientras hay borde que desvanecer (una capa de máscara permanente fuerza repintados al hacer scroll) */
+.detail-body[data-fade-top="1"],
+.detail-body[data-fade-bottom="1"],
+.side[data-fade-top="1"],
+.side[data-fade-bottom="1"] {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent 100%);
+}
+.detail-body[data-fade-top="1"],
+.side[data-fade-top="1"] { --fade-top: 56px; }
+.detail-body[data-fade-bottom="1"],
+.side[data-fade-bottom="1"] { --fade-bottom: 56px; }

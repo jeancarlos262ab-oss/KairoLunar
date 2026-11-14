@@ -1,0 +1,28 @@
+/* ═════════ Vista despejada / pantalla completa del globo ═════════ */
+html[data-focus] .topbar,
+html[data-focus] .side,
+html[data-focus] .verdict,
+html[data-focus] .explore,
+html[data-focus] .ask { display: none; }
+html[data-focus] .app { padding: 0; }
+html[data-focus] .main-left { grid-column: 1 / -1; grid-row: 1 / -1; padding: 0 0 22px 22px; }
+
+.focus-exit {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: rgba(0, 0, 0, 0.7);
+  font-family: var(--font-tech);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+.focus-exit svg { width: 14px; height: 14px; }
+.focus-exit:hover { background: var(--surface-3); border-color: rgba(255, 255, 255, 0.4); }

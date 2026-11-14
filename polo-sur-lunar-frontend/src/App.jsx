@@ -1,117 +1,244 @@
-import React, {useState, useEffect} from 'react'
-import './App.css'
-import Moon from './Moon.jsx'
-import Polar from './Polar.jsx'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import Home from './pages/Home'
+import KeepAlive from './components/ui/KeepAlive'
+import LangToggle from './components/ui/LangToggle'
+import ModeToggle from './components/ui/ModeToggle'
+import { BellIcon, GearIcon, HelpIcon, SearchIcon } from './components/ui/Icons'
+import Screens from './Screens.jsx'
+import TerrainView from './views/TerrainView'
+import SitesView from './views/SitesView'
+import DataBadge from './components/ui/DataBadge'
+import { buildGrid, analyzeAll, bestWindows, sampleIndex, upcomingEvents, DAY_MS, HOUR_MS } from './engine'
+import { clamp, eventTitle, fmtDateTime } from './lib/format'
+import { useT } from './i18n/i18n'
+import { ModeContext } from './state/mode'
+import { useStore } from './state/store'
+import { NAV_ITEMS } from './state/nav'
 
-const T = {
-  es: {nav:['INICIO','SITIOS','CIELO','TERRENO','CALENDARIO','APRENDER'], easy:'FÁCIL', exp:'EXPERTO', site:'Sitio',
-    sunEl:'Elevación del Sol', earthEl:'Elevación de la Tierra', nextSun:'Próximo Evento solar', nextEarth:'Próxima Salida de la Tierra',
-    state:'Estado', stateVal:'Con Sol, sin enlace', analysis:'Análisis', pred:'Predicciones', sunAbove:'Sol · sobre el horizonte',
-    noSet:'El Sol no se pone en toda la ventana', soon:'A punto de oscurecer', longest:'Noche más larga', never:'Nunca en sombra en esta ventana',
-    rec:'Recomendaciones', explore:'EXPLORAR', ask:'Dime qué quieres saber...', moon:'LUNA · POLO SUR', zoom:'ZOOM ×26.0'},
-  en: {nav:['HOME','SITES','SKY','TERRAIN','CALENDAR','LEARN'], easy:'EASY', exp:'EXPERT', site:'Site',
-    sunEl:'Sun elevation', earthEl:'Earth elevation', nextSun:'Next solar event', nextEarth:'Next Earthrise',
-    state:'Status', stateVal:'Sunlit, no link', analysis:'Analysis', pred:'Predictions', sunAbove:'Sun · above horizon',
-    noSet:'The Sun does not set in the whole window', soon:'About to go dark', longest:'Longest night', never:'Never in shadow in this window',
-    rec:'Recommendations', explore:'EXPLORE', ask:'Ask me anything...', moon:'MOON · SOUTH POLE', zoom:'ZOOM ×26.0'}
-}
+const PLAY_STEP_MS = 3 * HOUR_MS
 
-const Icon = ({d, s = 14}) => <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>
-const ICONS = {help:'M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 1-1 1.7M12 17h.01', search:'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zM21 21l-5-5',
-  bell:'M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10 21h4', gear:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z', x:'M6 6l12 12M18 6L6 18', plus:'M12 5v14M5 12h14',
-  ext:'M7 17L17 7M8 7h9v9', full:'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5', expand:'M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7'}
-
-const Stat = ({k, v}) => <div className="stat"><span>{k}</span><b>{v}</b></div>
-
-const SunPanel = () => (
-  <svg viewBox="0 0 300 120" className="pred">
-    <g stroke="#fff" strokeOpacity=".08">{[40,100,150,200,260].map(x=><line key={x} x1={x} y1="0" x2={x} y2="120"/>)}{[30,60,90].map(y=><line key={y} x1="0" y1={y} x2="300" y2={y}/>)}</g>
-    <path d="M104 98 A21 21 0 0 1 146 98Z" fill="#ffc94d"/>
-    <circle cx="125" cy="98" r="33" fill="none" stroke="#ffb820" strokeOpacity=".8"/>
-    <circle cx="125" cy="98" r="48" fill="none" stroke="#ffb820" strokeOpacity=".3" strokeDasharray="2 3"/>
-    <line x1="150" y1="98" x2="262" y2="86" stroke="#ffc94d" strokeDasharray="4 3"/><text x="210" y="72" className="ang">1.5°</text>
-    <rect y="98" width="300" height="22" fill="url(#hatch)"/><line x1="0" y1="98" x2="300" y2="98" stroke="#ccc"/>
-    <defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="6" stroke="#888" strokeWidth="1.2"/></pattern></defs>
-  </svg>)
-
-const NightPanel = () => (
-  <svg viewBox="0 0 300 100" className="pred">
-    <g stroke="#fff" strokeOpacity=".08">{[40,100,150,200,260].map(x=><line key={x} x1={x} y1="0" x2={x} y2="100"/>)}{[30,60].map(y=><line key={y} x1="0" y1={y} x2="300" y2={y}/>)}</g>
-    <circle cx="155" cy="45" r="30" fill="none" stroke="#ccc" strokeWidth="1.5"/>
-    <path d="M155 15 A30 30 0 0 0 155 75 A22 30 0 0 1 155 15Z" fill="#f2f2f2"/>
-    <line x1="155" y1="10" x2="155" y2="80" stroke="#777" strokeDasharray="3 3"/>
-    {[[70,30],[207,17],[258,50],[40,70]].map(([x,y],i)=><text key={i} x={x} y={y} fill="#aaa" fontSize="12">+</text>)}
-    <rect y="82" width="300" height="18" fill="url(#hatch)"/><line x1="0" y1="82" x2="300" y2="82" stroke="#ccc"/>
-  </svg>)
-
-const Card = ({title, sub, name, msg, warn, children}) => (
-  <div className="block">
-    <h4>{title}</h4>
-    <div className="viz">{children}<button className="ic ext"><Icon d={ICONS.ext}/></button></div>
-    <div className="meta"><small>{sub}</small><b>{name}</b></div>
-    <div className="note"><i className={warn ? 'w' : ''}>{warn ? '!' : '●'}</i>{msg}</div>
-  </div>)
-
+/**
+ * Cascarón de la app. INICIO (HOME) es el de `base` (misma barra superior, mismo globo y mismas tarjetas);
+ * el resto de pantallas siguen siendo las de src y se irán migrando una a una.
+ */
 export default function App() {
-  const [lang, setLang] = useState('es'), [mode, setMode] = useState('exp')
-  const [playing, setPlaying] = useState(false), [day, setDay] = useState(0)
-  const t = T[lang]
+  const {
+    mode, view, startIso, spanDays, mask, priority, planDays, sites, enabled, selectedId, scrubMs, playing, lang,
+    setMode, setView, setStartIso, setMask, setSelectedId, setScrubMs, setPlaying,
+  } = useStore()
+  const t = useT()
+  const [bellOpen, setBellOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [legacySite, setLegacySite] = useState(0)
+  const askRef = useRef(null)
+
+  const startMs = useMemo(() => Date.parse(`${startIso}T00:00:00Z`), [startIso])
+  const endMs = startMs + spanDays * DAY_MS
+
   useEffect(() => {
-    if (!playing) return
-    const id = setInterval(() => setDay(d => (d + .1) % 30), 100)
-    return () => clearInterval(id)
-  }, [playing])
-  const date = new Date(Date.UTC(2026, 10, 14, 12) + day * 864e5)
-  const fmt = date.toLocaleDateString(lang, {day: 'numeric', month: 'short', timeZone: 'UTC'}).replace('.', '') + ', ' + String(date.getUTCHours()).padStart(2, '0') + ':00 UTC'
+    setScrubMs(startMs + 12 * HOUR_MS)
+  }, [startMs, spanDays])
+
+  useEffect(() => {
+    document.documentElement.lang = lang
+    document.title = t('app.title')
+  }, [lang, t])
+
+  // Motor de datos simulado (ver engine/index.js)
+  const grid = useMemo(() => buildGrid(startMs, spanDays), [startMs, spanDays])
+  const analyses = useMemo(
+    () => analyzeAll(grid, sites, mask, priority).filter((a) => enabled.has(a.site.id)),
+    [grid, sites, mask, priority, enabled],
+  )
+  const plans = useMemo(() => bestWindows(analyses, grid, planDays, priority), [analyses, grid, planDays, priority])
+
+  const selected = analyses.find((a) => a.site.id === selectedId) ?? analyses[0]
+  const timeMs = clamp(scrubMs, startMs, endMs)
+  const idx = sampleIndex(grid, timeMs)
+
+  useEffect(() => {
+    if (!playing) return undefined
+    const id = window.setInterval(() => {
+      setScrubMs((v) => (v + PLAY_STEP_MS > endMs ? startMs : v + PLAY_STEP_MS))
+    }, 90)
+    return () => window.clearInterval(id)
+  }, [playing, startMs, endMs])
+
+  const soon = useMemo(() => (selected ? upcomingEvents(selected, grid, idx, 6).filter((e) => e.inHours <= 72) : []), [selected, grid, idx])
+
+  const jumpToPlan = (r) => {
+    setSelectedId(r.site.id)
+    setScrubMs(r.startMs + 12 * HOUR_MS)
+  }
+
+  const ask = (raw) => {
+    const q = raw.trim()
+    if (q === '') return ''
+    if (/^\d{4}-\d{2}-\d{2}$/.test(q)) {
+      const ms = Date.parse(`${q}T12:00:00Z`)
+      if (Number.isNaN(ms)) return t('ask.badDate', { q })
+      if (ms >= startMs && ms <= endMs) setScrubMs(ms)
+      else setStartIso(q)
+      return t('ask.jumped', { q })
+    }
+    if (/^(best|top|mejor)/i.test(q)) {
+      const top = plans[0]
+      if (top) {
+        jumpToPlan(top)
+        return t('ask.best', { site: top.site.name })
+      }
+      const best = [...analyses].sort((a, b) => b.score - a.score)[0]
+      if (best) {
+        setSelectedId(best.site.id)
+        return t('ask.bestSite', { site: best.site.name })
+      }
+    }
+    const hit = analyses.find((a) => a.site.name.toLowerCase().includes(q.toLowerCase()))
+    if (hit) {
+      setSelectedId(hit.site.id)
+      return t('ask.showing', { site: hit.site.name })
+    }
+    return t('ask.none', { q })
+  }
+
+  const focusAsk = () => {
+    setBellOpen(false)
+    setSettingsOpen(false)
+    setView('HOME')
+    window.setTimeout(() => askRef.current?.focus(), 30)
+  }
+
+  // Puente con las pantallas que aún son las de src (usan "día" 0–30 y el modo 'exp')
+  const day = (timeMs - startMs) / DAY_MS
+  const setDay = (d) => setScrubMs(startMs + d * DAY_MS)
+
+  const visited = useRef(new Set())
+  visited.current.add(view)
 
   return (
-    <div className="app">
-      <header>
-        <div className="logo"><i/>LUNAR<span>POLO SUR</span></div>
-        <nav>{t.nav.map((n, i) => <a key={n} className={i === 0 ? 'on' : ''}>{n}</a>)}</nav>
-        <div className="tools">
-          <div className="seg"><button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button><button className={lang === 'es' ? 'on' : ''} onClick={() => setLang('es')}>ES</button></div>
-          <div className="seg"><button className={mode === 'easy' ? 'on' : ''} onClick={() => setMode('easy')}>{t.easy}</button><button className={mode === 'exp' ? 'on' : ''} onClick={() => setMode('exp')}>{t.exp}</button></div>
-          {['help','search','bell','gear'].map(k => <button key={k} className="sq"><Icon d={ICONS[k]} s={16}/></button>)}
-        </div>
-      </header>
+    <ModeContext.Provider value={mode}>
+      <div className={`app${view === 'HOME' ? '' : view === 'TERRAIN' || view === 'SITES' ? ' detail' : ' detail legacy'}`}>
+        <header className="topbar">
+          <div className="logo">
+            LUNAR<small>{t('app.sub')}</small>
+          </div>
 
-      <main>
-        <section className="stage">
-          <Moon/>
-          <div className="inset">
-            <div className="globe"><i/></div>
-            <p>{t.moon}<br/><em>{t.zoom}</em></p>
-          </div>
-          <button className="explore">{t.explore}</button>
-          <div className="bars">
-            <div className="time">
-              <button className="play" onClick={() => setPlaying(p => !p)}>{playing ? '❚❚' : '▶'}</button>
-              <div><span>{fmt}</span><input type="range" min="0" max="30" step=".1" value={day} onChange={e => setDay(+e.target.value)}/></div>
-            </div>
-            <div className="ask"><i>✦</i><span>{t.ask}</span>{['help','full','expand'].map(k => <button key={k} className="sq sm"><Icon d={ICONS[k]}/></button>)}</div>
-          </div>
-        </section>
+          <nav className="nav" aria-label={t('nav.aria')}>
+            {NAV_ITEMS.map((item) => (
+              <button key={item} type="button" aria-current={view === item ? 'page' : undefined} onClick={() => setView(item)}>
+                {t(`nav.${item}`)}
+              </button>
+            ))}
+          </nav>
 
-        <aside>
-          <div className="row">
-            <div className="panel site">
-              <div className="top"><div><small>{t.site}</small><h3>SHACKLETON</h3></div><button className="ic big"><Icon d={ICONS.x}/></button></div>
-              <div className="grid"><Stat k={t.sunEl} v="1.4°"/><Stat k={t.earthEl} v="-4.3°"/><Stat k={t.nextSun} v="—"/><Stat k={t.nextEarth} v="3.3 d"/></div>
-              <div className="state"><div><small>{t.state}</small><b>{t.stateVal}</b></div><button className="ic big"><Icon d={ICONS.plus}/></button></div>
-            </div>
-            <div className="panel polar"><Polar/></div>
+          <div className="top-actions">
+            <LangToggle />
+            <ModeToggle mode={mode} onChange={setMode} />
+            <button className="icon-btn" type="button" aria-label={t('top.tour')}>
+              <HelpIcon />
+            </button>
+            <button className="icon-btn" type="button" aria-label={t('top.search')} onClick={focusAsk}>
+              <SearchIcon />
+            </button>
+            <button
+              className="icon-btn"
+              type="button"
+              aria-label={t('top.events')}
+              aria-expanded={bellOpen}
+              onClick={() => {
+                setBellOpen((v) => !v)
+                setSettingsOpen(false)
+              }}
+            >
+              <BellIcon />
+              {soon.length > 0 && <span className="badge">{soon.length}</span>}
+            </button>
+            <button
+              className="icon-btn"
+              type="button"
+              aria-label={t('top.settings')}
+              aria-expanded={settingsOpen}
+              onClick={() => {
+                setSettingsOpen((v) => !v)
+                setBellOpen(false)
+              }}
+            >
+              <GearIcon />
+            </button>
           </div>
-          <div className="panel analysis">
-            <div className="ah"><i>✦</i>{t.analysis}</div>
-            <h4 className="sec">{t.pred}</h4>
-            <Card sub={t.sunAbove} name="Shackleton" msg={t.noSet}><SunPanel/></Card>
-            <Card title={t.soon} sub={t.longest} name="Shackleton" msg={t.never} warn><NightPanel/></Card>
-            <h4 className="sec">{t.rec}</h4>
-            <div className="viz globe3d"><svg viewBox="0 0 300 90"><g fill="none" stroke="#5b7bff" strokeWidth="1.2"><ellipse cx="150" cy="60" rx="45" ry="45"/><ellipse cx="150" cy="60" rx="20" ry="45"/><ellipse cx="150" cy="60" rx="45" ry="16"/></g></svg></div>
+        </header>
+
+        {selected && (
+          <KeepAlive name="HOME" active={view === 'HOME'}>
+            <Home
+              analyses={analyses}
+              selected={selected}
+              grid={grid}
+              idx={idx}
+              timeMs={timeMs}
+              mask={mask}
+              playing={playing}
+              plan={plans[0] ?? null}
+              askRef={askRef}
+              onSelect={setSelectedId}
+              onPlan={jumpToPlan}
+              onGo={setView}
+              onScrub={setScrubMs}
+              onTogglePlay={() => setPlaying((v) => !v)}
+              onAsk={ask}
+            />
+          </KeepAlive>
+        )}
+
+        {view === 'TERRAIN' && selected && <TerrainView analyses={analyses} selectedId={selected.site.id} grid={grid} idx={idx} />}
+
+        {view === 'SITES' && selected && (
+          <SitesView
+            analyses={analyses}
+            selected={selected}
+            grid={grid}
+            timeMs={timeMs}
+            mask={mask}
+            spanDays={spanDays}
+            startIso={startIso}
+            badge={<DataBadge data={null} grid={grid} lhorSites={0} totalSites={analyses.length} />}
+            onSelect={setSelectedId}
+          />
+        )}
+
+        {view !== 'HOME' && view !== 'TERRAIN' && view !== 'SITES' && (
+          <Screens
+            screen={NAV_ITEMS.indexOf(view)}
+            lang={lang}
+            site={legacySite}
+            setSite={setLegacySite}
+            go={(i) => setView(NAV_ITEMS[i])}
+            mode={mode === 'expert' ? 'exp' : 'easy'}
+            day={day}
+            setDay={setDay}
+            playing={playing}
+            setPlaying={setPlaying}
+          />
+        )}
+
+        {bellOpen && (
+          <div className="popover bell">
+            <div className="panel-title">{t('bell.title', { site: selected?.site.name ?? '' })}</div>
+            {soon.length === 0 ? (
+              <p className="hint">{t('bell.none')}</p>
+            ) : (
+              <ul>
+                {soon.map((e) => (
+                  <li key={`${e.kind}-${e.ms}`}>
+                    <b>{eventTitle(e.title, t)}</b>
+                    <span>{fmtDateTime(e.ms)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-        </aside>
-      </main>
-    </div>
+        )}
+      </div>
+    </ModeContext.Provider>
   )
 }

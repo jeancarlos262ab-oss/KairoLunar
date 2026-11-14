@@ -1,0 +1,151 @@
+/* ───────── LEARN ───────── */
+.learn-cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.learn-card {
+  padding: 12px;
+  border-radius: 2px;
+  background: var(--glass);
+}
+
+.learn-card h3 {
+  margin: 12px 0 6px;
+  font-family: var(--font-tech);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.learn-card p {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+.diagram {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.d-label {
+  font-family: var(--font-body);
+  font-size: 7.5px;
+  fill: rgba(255, 255, 255, 0.75);
+}
+
+.d-label.ok {
+  fill: #8fd694;
+}
+
+.d-label.bad {
+  fill: #ff9eb5;
+}
+
+.learn-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.steps {
+  margin-top: 8px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.steps li::marker {
+  color: var(--c-01);
+  font-family: var(--font-tech);
+  font-size: 11px;
+}
+
+.faq {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.faq details {
+  padding: 10px 12px;
+  border-radius: 2px;
+  background: var(--glass);
+}
+
+.faq summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  list-style: none;
+}
+
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq summary::before {
+  content: "+";
+  display: inline-block;
+  width: 16px;
+  color: var(--c-01);
+  font-family: var(--font-tech);
+}
+
+.faq details[open] summary::before {
+  content: "–";
+}
+
+.faq p {
+  margin-top: 8px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-dim);
+}
+
+.glossary {
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.glossary div {
+  padding: 12px 14px;
+  border-radius: 2px;
+  background: var(--glass);
+}
+
+.glossary dt {
+  font-family: var(--font-tech);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-01);
+  margin-bottom: 4px;
+}
+
+.glossary dd {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.about {
+  margin-top: 6px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-dim);
+  max-width: 900px;
+}

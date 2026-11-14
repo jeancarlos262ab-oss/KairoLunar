@@ -1,0 +1,126 @@
+/* ═════════ Home · columna izquierda (mejorada) ═════════ */
+.verdict {
+  position: relative;
+  padding: 16px 18px 16px 20px;
+  background: rgba(7, 7, 7, 0.92); /* sin backdrop-filter: desenfocar encima del canvas WebGL es muy caro */
+}
+.verdict::before { /* barra de acento */
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--nasa-red);
+}
+.verdict-kicker {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.verdict-kicker::before {
+  content: "";
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--nasa-red);
+  animation: verdictPulse 2s ease-in-out infinite;
+}
+@keyframes verdictPulse { 50% { opacity: 0.25; } }
+.verdict-name {
+  margin-top: 8px;
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+.verdict-meters {
+  margin-top: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+}
+.verdict-meters .v-row {
+  display: grid;
+  grid-template-columns: 76px 1fr;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.verdict-meters .stars { gap: 4px; }
+.verdict-meters .stars i { width: 28px; height: 6px; }
+.verdict p {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.explore {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 28px 14px 34px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  border: 1px solid var(--line);
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+.explore svg { width: 14px; height: 14px; transition: transform 0.18s; }
+.explore:hover { background: var(--nasa-red); border-color: var(--nasa-red); color: #fff; }
+.explore:hover svg { transform: translate(2px, -2px); }
+
+.scrubber, .ask {
+  border-top: 1px solid var(--line);
+  background: rgba(7, 7, 7, 0.92);
+}
+.scrubber { gap: 12px; padding: 10px 14px 10px 10px; }
+.scrubber .mini { background: var(--nasa-red); color: #fff; width: 38px; height: 38px; font-size: 11px; }
+.scrubber .mini:hover { background: #ff5a40; }
+.scrub-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.scrubber input[type="range"] { accent-color: var(--nasa-red); width: 100%; }
+.ask { transition: border-color 0.18s; }
+.ask:focus-within { border-top-color: var(--nasa-red); }
+.ask .spark { background: transparent; color: var(--nasa-red); }
+.ask input { font-size: 13px; }
+
+/* Luna 3D (WebGL): entra con un fundido suave; el canvas de arriba recoge arrastre y rueda */
+.hero-3d { animation: hero3d-in 0.7s ease-out both; }
+@keyframes hero3d-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .hero-3d { animation: none; } }
+
+/* Terreno polar: barra de vistas, panel de datos y rótulos de la rejilla */
+.terr-tools { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.terr-btn {
+  padding: 6px 12px;
+  font-family: var(--font-tech);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+}
+.terr-btn[aria-pressed="true"] { border-color: rgba(255, 255, 255, 0.6); background: var(--surface-3); color: #fff; }
+.terr-btn:disabled { opacity: 0.35; cursor: default; }
+.terr-hud { position: absolute; inset: 0; z-index: 2; pointer-events: none; font-family: var(--font-tech); }
+.terr-hud-site { position: absolute; top: 10px; left: 12px; display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.6); font-size: 10px; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.7); }
+.terr-hud-site b { font-size: 12px; color: #FFC857; letter-spacing: 0.1em; }
+.terr-hud-scale { position: absolute; left: 12px; bottom: 10px; font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255, 255, 255, 0.45); }
+.ring-tag { font-family: var(--font-tech); font-size: 10px; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.6); text-shadow: 0 0 4px #000, 0 0 2px #000; white-space: nowrap; }
+.ring-tag.n { color: #FFC857; font-weight: 700; }

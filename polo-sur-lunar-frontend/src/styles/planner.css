@@ -1,0 +1,77 @@
+/* ───────── Planificador ───────── */
+.plan-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.plan-card {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 2px;
+  background: var(--glass);
+  transition: background 0.15s;
+}
+
+.plan-card:hover {
+  background: var(--glass-2);
+}
+
+.plan-card.active {
+  background: var(--glass-3);
+}
+
+.plan-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-dates {
+  margin: 8px 0 6px;
+  font-family: var(--font-tech);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--c-01);
+  letter-spacing: 0.04em;
+}
+
+.plan-stars {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.plan-flex {
+  margin: 2px 0 8px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #8fd694;
+}
+
+.plan-text {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-dim);
+}
+
+.plan-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.plan-metrics span {
+  padding: 3px 8px;
+  border-radius: 2px;
+  background: var(--glass-2);
+  font-size: 10.5px;
+  color: var(--text-dim);
+}

@@ -1,0 +1,28 @@
+/* ═════════ Tipografía display: Nasalization ═════════
+   Solo una variante (400): se evitan negritas/stretch sintéticos. */
+.logo,
+.nav,
+.nav button,
+.panel-title,
+.section-label,
+.site-name,
+.big-number,
+.stat b,
+.verdict-name,
+.explore,
+.scrub-label,
+.rank-pos,
+.rank-score,
+.modal h2,
+.learn-card h3,
+.info h3,
+.sat-card .name,
+.mode-toggle button {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-stretch: 100%;
+  font-synthesis: none;
+}
+.logo { letter-spacing: 0.08em; }
+.panel-title, .section-label, .mode-toggle button { letter-spacing: 0.14em; }
+.nav, .nav button { letter-spacing: 0.08em; }

@@ -1,0 +1,21 @@
+/* Esqueleto de la pantalla inicial: misma rejilla que .app, adaptada a cada ancho */
+.sk-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 26px 0; }
+.sk-top-nav, .sk-top-actions { display: flex; gap: 10px; }
+.sk-top-actions { gap: 8px; }
+.sk-body { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; padding: 24px 26px; }
+.sk-side { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+.sk-hero { min-width: 0; }
+
+@media (max-width: 1180px) {
+  .sk-body { grid-template-columns: minmax(0, 1fr); }
+  .sk-top-nav .sk-nav-item:nth-child(n + 4) { display: none; }
+}
+@media (max-width: 720px) {
+  .sk-top { padding: 16px 16px 0; }
+  .sk-body { padding: 18px 16px; }
+  .sk-top-nav { display: none; }
+  .sk-top-actions .sk-act:nth-child(n + 3) { display: none; }
+}
+@media (max-width: 380px) {
+  .sk-top, .sk-body { padding-inline: 12px; }
+}

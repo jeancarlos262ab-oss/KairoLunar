@@ -1,0 +1,19 @@
+/* ───────── Accesibilidad y Radix ───────── */
+.mode-toggle button[data-state="on"] {
+  background: var(--c-01);
+  color: #000;
+  font-weight: 700;
+}
+.lang-toggle { margin-right: 4px; }
+.term { cursor: help; }
+.term::after { display: none !important; } /* el tooltip ahora lo dibuja Radix */
+:focus-visible { outline: 2px solid var(--c-01); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip-link { position: absolute; left: -999px; top: 8px; z-index: 300; background: var(--c-01); color: #000; padding: 8px 12px; border-radius: 2px; }
+.skip-link:focus { left: 8px; }
+.data-badges { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; }
+.data-badges .chip.ok { background: rgba(124, 240, 201, 0.18); color: #8fd694; }
+.data-badges .hint { flex-basis: 100%; margin: 2px 0 0; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}

@@ -1,0 +1,143 @@
+/* ───────── Métricas y ranking ───────── */
+.site-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 8px 0 12px;
+}
+
+.site-name {
+  font-family: var(--font-tech);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-cell {
+  background: var(--glass);
+  border-radius: 2px;
+  padding: 10px 12px;
+}
+
+.stat-cell dt {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  line-height: 1.25;
+}
+
+.stat-cell dd {
+  font-family: var(--font-tech);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.stat-cell dd.sun {
+  color: var(--sun-soft);
+}
+
+.stat-cell dd.earth {
+  color: var(--earth-soft);
+}
+
+.rank-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.rank-card {
+  width: 100%;
+  display: block;
+  text-align: left;
+  padding: 11px 12px;
+  border-radius: 2px;
+  background: var(--glass);
+  transition: background 0.15s;
+}
+
+.rank-card:hover {
+  background: var(--glass-2);
+}
+
+.rank-card.active {
+  background: var(--glass-3);
+}
+
+.rank-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.rank-pos {
+  font-family: var(--font-tech);
+  font-size: 10px;
+  color: var(--text-faint);
+  width: 14px;
+}
+
+.rank-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-score {
+  font-family: var(--font-tech);
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--c-01);
+}
+
+.mini-bar {
+  display: grid;
+  grid-template-columns: 78px 1fr 42px;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  font-size: 10.5px;
+  color: var(--text-dim);
+}
+
+.mini-track {
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.mini-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+.mini-fill.sun {
+  background: var(--sun);
+}
+
+.mini-fill.earth {
+  background: var(--earth);
+}
+
+.mini-fill.dark {
+  background: rgba(255, 255, 255, 0.45);
+}
+
+.mini-val {
+  text-align: right;
+  color: var(--text);
+}
