@@ -1,0 +1,63 @@
+{
+  "catalog_version": "1.0.0",
+  "generated_by": "generate_masks.py",
+  "moon_radius_m": 1737400.0,
+  "observer_height_m_default": 2.0,
+  "parameters": {
+    "min_radius_m": 500.0,
+    "max_radius_m": 80000.0,
+    "step_m": 250.0,
+    "azimuth_resolution_deg": 1.0,
+    "azimuth_count": 360
+  },
+  "sites": [
+    {
+      "site_id": "shackleton_rim",
+      "name": "Shackleton Crater Rim",
+      "lat": -89.68,
+      "lon": 129.20,
+      "file": "horizon_masks/shackleton_rim.json",
+      "description": "Artemis target / near-eternal light peak near lunar south pole."
+    },
+    {
+      "site_id": "malapert_massif",
+      "name": "Malapert Massif",
+      "lat": -86.00,
+      "lon": 0.00,
+      "file": "horizon_masks/malapert_massif.json",
+      "description": "CLPS target / direct Earth visibility from lunar south pole region."
+    },
+    {
+      "site_id": "nobile_crater",
+      "name": "Nobile Crater Rim",
+      "lat": -85.20,
+      "lon": 53.50,
+      "file": "horizon_masks/nobile_crater.json",
+      "description": "VIPER volatile exploration target region."
+    },
+    {
+      "site_id": "cabeus_crater",
+      "name": "Cabeus Crater Floor",
+      "lat": -84.90,
+      "lon": -35.50,
+      "file": "horizon_masks/cabeus_crater.json",
+      "description": "Permanent shadow region / LCROSS impact site."
+    },
+    {
+      "site_id": "statio_shiv_shakti",
+      "name": "Statio Shiv Shakti (Chandrayaan-3)",
+      "lat": -69.373,
+      "lon": 32.319,
+      "file": "horizon_masks/statio_shiv_shakti.json",
+      "description": "Successful high southern latitude mission (2023)."
+    },
+    {
+      "site_id": "apollo_11",
+      "name": "Apolo 11 (Mare Tranquillitatis)",
+      "lat": 0.674,
+      "lon": 23.473,
+      "file": "horizon_masks/apollo_11.json",
+      "description": "Historical equatorial reference for educational contrast."
+    }
+  ]
+}
