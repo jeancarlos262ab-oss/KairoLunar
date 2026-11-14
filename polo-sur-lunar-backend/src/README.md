@@ -1,8 +1,10 @@
 # Polo Sur Lunar — Backend de Datos y Cómputo
 
-Conjunto de herramientas de generación de datos y cómputo para la planificación de sitios en el polo sur lunar. Este directorio **no** contiene un servidor web ni una aplicación cliente: produce archivos binarios estáticos y una biblioteca de cómputo geométrico reutilizable en nativo o WebAssembly.
+Conjunto de herramientas de generación de datos y cómputo para la planificación de sitios en el polo sur lunar. Produce archivos binarios estáticos y una biblioteca de cómputo geométrico reutilizable en nativo o WebAssembly, y los expone a la aplicación web mediante una API REST (`api/`). Este directorio no contiene la aplicación cliente.
 
 ## Estructura de subdirectorios
+
+- **`api/`**: API REST en Python/FastAPI (`lunarapi`). Lee los binarios generados por el pipeline y los sirve como JSON o binario. Además calcula datos derivados: posición del Sol y la Tierra por sitio, fracción visible del disco solar, visibilidad de la Tierra, estadísticas de iluminación y máscaras de horizonte bajo demanda. Ver [`api/README.md`](api/README.md).
 
 - **`pipeline/`**: Paquete Python (`lunarpipe`) encargado de leer un DEM GeoTIFF en proyección estereográfica polar sur, validar el catálogo de sitios, calcular máscaras de horizonte por trazado de rayos, recortar y submuestrear el terreno, descargar/cargar kernels NAIF SPICE para obtener efemérides Sol/Tierra en el marco `MOON_ME`, y exportar los archivos binarios versión 1.
 - **`horizon-wasm/`**: Biblioteca TypeScript (`@polo-sur-lunar/horizon`) que implementa el cálculo de máscaras de horizonte (`computeHorizonMask`) sobre un DEM `Float32Array` *row-major* y la fracción visible del disco solar (`solarDiskFraction`) mediante el modelo de segmento circular, lista para ejecutarse tanto en Node.js (`>= 22.6`) como en aplicaciones cliente web/TypeScript sin necesidad de compilar Rust/C++.
