@@ -3,16 +3,17 @@ import { createLand, type LandOptions } from './scene/createLand';
 import { createSun, type SunOptions } from './scene/createSun';
 import { createPinObjetive } from './scene/createPinObjetive';
 import { createTimeControls } from './scene/createTimeControls';
+import { createSiteSelector } from './createSiteSelector';
+import { createSiteComparison } from './createSiteComparison';
+import { SITES, type LandingSite } from './sites';
 import { findNextSunEvent, getMoonAgeDays, getSunHorizontal } from './lunarEphemeris';
 
 export interface VisualizerOptions {
+  siteId?: string;
   landing?: {
-    name?: string;
     x?: number;
     z?: number;
     color?: number;
-    lat?: number;
-    lon?: number;
   };
   startDate?: Date;
   land?: LandOptions;
@@ -30,22 +31,29 @@ export interface VisualizerResult {
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
   setDate: (date: Date) => void;
+  setSite: (site: LandingSite) => void;
   dispose: () => void;
 }
 
 const DEFAULTS = {
-  landing: { name: 'Shackleton', x: 10, z: -15, color: 0xff3b30, lat: -89.9, lon: 129.78 },
+  siteId: 'shackleton',
+  landing: { x: 10, z: -15, color: 0xff3b30 },
   camera: { fov: 50, near: 0.1, far: 5000, position: [0, 40, 80] as [number, number, number] },
 };
 
-type PaintableButton = HTMLButtonElement & { paint: (on: boolean) => void };
+interface ToggleButton extends HTMLButtonElement {
+  paint: (on: boolean) => void;
+  setLabel: (label: string) => void;
+}
 
 function applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
   Object.assign(element.style, styles);
 }
 
-function createToggleButton(label: string, initial: boolean): PaintableButton {
-  const button = document.createElement('button') as PaintableButton;
+function createToggleButton(initialLabel: string, initial: boolean): ToggleButton {
+  const button = document.createElement('button') as ToggleButton;
+  let label = initialLabel;
+  let on = initial;
   button.type = 'button';
   applyStyles(button, {
     position: 'absolute',
@@ -60,16 +68,29 @@ function createToggleButton(label: string, initial: boolean): PaintableButton {
     cursor: 'pointer',
     zIndex: '10',
     transition: 'background 0.2s, color 0.2s',
+    maxWidth: '30%',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   });
 
-  button.paint = (on: boolean): void => {
+  const render = (): void => {
     button.textContent = `${on ? '●' : '○'}  ${label}`;
     button.style.background = on ? '#ffffff' : 'rgba(0, 0, 0, 0.6)';
     button.style.color = on ? '#000000' : '#ffffff';
     button.setAttribute('aria-pressed', String(on));
   };
 
-  button.paint(initial);
+  button.paint = (value: boolean): void => {
+    on = value;
+    render();
+  };
+  button.setLabel = (value: string): void => {
+    label = value;
+    render();
+  };
+
+  render();
   return button;
 }
 
@@ -84,6 +105,8 @@ export function createVisualizer(
   const landing = { ...DEFAULTS.landing, ...options.landing };
   const cameraConfig = { ...DEFAULTS.camera, ...options.camera };
   const startDate = options.startDate ?? new Date();
+  let currentSite: LandingSite =
+    SITES.find((site) => site.id === (options.siteId ?? DEFAULTS.siteId)) ?? SITES[0];
 
   const previousPosition = container.style.position;
   const previousBackground = container.style.background;
@@ -116,13 +139,13 @@ export function createVisualizer(
   const land = createLand(scene, camera, renderer.domElement, options.land);
   const sun = createSun(scene, options.sun);
   const pin = createPinObjetive(scene, land.mesh, {
-    name: landing.name,
+    name: currentSite.name,
     x: landing.x,
     z: landing.z,
     color: landing.color,
   });
 
-  const button = createToggleButton(landing.name, pin.isVisible());
+  const button = createToggleButton(currentSite.name, pin.isVisible());
   const onToggle = (): void => {
     button.paint(pin.toggle());
   };
@@ -130,19 +153,37 @@ export function createVisualizer(
   container.appendChild(button);
 
   const applyDate = (date: Date): void => {
-    const h = getSunHorizontal(date, landing.lat, landing.lon);
+    const h = getSunHorizontal(date, currentSite.lat, currentSite.lon);
     sun.setHorizontal(h.azimuth, h.elevation);
     const state = h.elevation > 0 ? 'Sol sobre el horizonte' : 'Sol bajo el horizonte';
     timeControls.setInfo(
-      `${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
+      `${currentSite.name}  ·  ${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
     );
+    comparison.setCursorDate(date);
   };
 
   const timeControls = createTimeControls(container, {
     initialDate: startDate,
     onChange: applyDate,
-    findEvent: (kind, from) => findNextSunEvent(from, kind, landing.lat, landing.lon),
+    findEvent: (kind, from) => findNextSunEvent(from, kind, currentSite.lat, currentSite.lon),
   });
+
+  const selector = createSiteSelector(container, {
+    sites: SITES,
+    initialSiteId: currentSite.id,
+    onSelect: (site) => {
+      currentSite = site;
+      button.setLabel(site.name);
+      applyDate(timeControls.getDate());
+    },
+    onAddToCompare: (site) => comparison.addSite(site),
+  });
+
+  const comparison = createSiteComparison(container, {
+    getDate: () => timeControls.getDate(),
+    onSelect: (site) => selector.setSite(site),
+  });
+
   applyDate(startDate);
 
   const resize = (): void => {
@@ -172,6 +213,8 @@ export function createVisualizer(
     observer.disconnect();
     button.removeEventListener('click', onToggle);
     button.remove();
+    comparison.dispose();
+    selector.dispose();
     timeControls.dispose();
     pin.dispose();
     sun.dispose();
@@ -182,5 +225,12 @@ export function createVisualizer(
     container.style.background = previousBackground;
   };
 
-  return { scene, camera, renderer, setDate: (date) => timeControls.setDate(date), dispose };
+  return {
+    scene,
+    camera,
+    renderer,
+    setDate: (date) => timeControls.setDate(date),
+    setSite: (site) => selector.setSite(site),
+    dispose,
+  };
 }
