@@ -1,12 +1,19 @@
 import * as THREE from 'three';
 import { createLand, type LandOptions } from './scene/createLand';
 import { createSun, type SunOptions } from './scene/createSun';
-import { createPinObjetive } from './scene/createPinObjetive';
+import { createEarth, type EarthOptions } from './scene/createEarth';
+import { createLunarModule } from './scene/createLunarModule';
 import { createTimeControls } from './scene/createTimeControls';
 import { createSiteSelector } from './createSiteSelector';
 import { createSiteComparison } from './createSiteComparison';
+import { createSkyPanel } from './createSkyPanel';
 import { SITES, type LandingSite } from './sites';
-import { findNextSunEvent, getMoonAgeDays, getSunHorizontal } from './lunarEphemeris';
+import {
+  findNextSunEvent,
+  getEarthHorizontal,
+  getMoonAgeDays,
+  getSunHorizontal,
+} from './lunarEphemeris';
 
 export interface VisualizerOptions {
   siteId?: string;
@@ -18,6 +25,7 @@ export interface VisualizerOptions {
   startDate?: Date;
   land?: LandOptions;
   sun?: SunOptions;
+  earth?: EarthOptions;
   camera?: {
     fov?: number;
     near?: number;
@@ -138,16 +146,16 @@ export function createVisualizer(
 
   const land = createLand(scene, camera, renderer.domElement, options.land);
   const sun = createSun(scene, options.sun);
-  const pin = createPinObjetive(scene, land.mesh, {
+  const earth = createEarth(scene, options.earth);
+  const lander = createLunarModule(scene, land.mesh, {
     name: currentSite.name,
     x: landing.x,
     z: landing.z,
-    color: landing.color,
   });
 
-  const button = createToggleButton(currentSite.name, pin.isVisible());
+  const button = createToggleButton(currentSite.name, lander.isVisible());
   const onToggle = (): void => {
-    button.paint(pin.toggle());
+    button.paint(lander.toggle());
   };
   button.addEventListener('click', onToggle);
   container.appendChild(button);
@@ -155,11 +163,16 @@ export function createVisualizer(
   const applyDate = (date: Date): void => {
     const h = getSunHorizontal(date, currentSite.lat, currentSite.lon);
     sun.setHorizontal(h.azimuth, h.elevation);
+    const e = getEarthHorizontal(date, currentSite.lat, currentSite.lon);
+    earth.setHorizontal(e.azimuth, e.elevation);
+    earth.setSunDirection(h.azimuth, h.elevation);
+    earth.setDate(date);
     const state = h.elevation > 0 ? 'Sol sobre el horizonte' : 'Sol bajo el horizonte';
     timeControls.setInfo(
       `${currentSite.name}  ·  ${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
     );
     comparison.setCursorDate(date);
+    skyPanel.update(date);
   };
 
   const timeControls = createTimeControls(container, {
@@ -184,6 +197,10 @@ export function createVisualizer(
     onSelect: (site) => selector.setSite(site),
   });
 
+  const skyPanel = createSkyPanel(container, {
+    getSite: () => currentSite,
+  });
+
   applyDate(startDate);
 
   const resize = (): void => {
@@ -203,7 +220,7 @@ export function createVisualizer(
     last = now;
 
     timeControls.tick(delta);
-    pin.update(delta);
+    lander.update(delta);
     land.update();
     renderer.render(scene, camera);
   });
@@ -213,10 +230,12 @@ export function createVisualizer(
     observer.disconnect();
     button.removeEventListener('click', onToggle);
     button.remove();
+    skyPanel.dispose();
     comparison.dispose();
     selector.dispose();
     timeControls.dispose();
-    pin.dispose();
+    lander.dispose();
+    earth.dispose();
     sun.dispose();
     land.dispose();
     renderer.dispose();
