@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { createLand, type LandOptions } from './scene/createLand';
 import { createSun, type SunOptions } from './scene/createSun';
 import { createPinObjetive } from './scene/createPinObjetive';
+import { createTimeControls } from './scene/createTimeControls';
+import { findNextSunEvent, getMoonAgeDays, getSunHorizontal } from './lunarEphemeris';
 
 export interface VisualizerOptions {
   landing?: {
@@ -9,7 +11,10 @@ export interface VisualizerOptions {
     x?: number;
     z?: number;
     color?: number;
+    lat?: number;
+    lon?: number;
   };
+  startDate?: Date;
   land?: LandOptions;
   sun?: SunOptions;
   camera?: {
@@ -24,22 +29,24 @@ export interface VisualizerResult {
   scene: THREE.Scene;
   camera: THREE.PerspectiveCamera;
   renderer: THREE.WebGLRenderer;
+  setDate: (date: Date) => void;
   dispose: () => void;
 }
 
 const DEFAULTS = {
-  landing: { name: 'Shackleton', x: 10, z: -15, color: 0xff3b30 },
+  landing: { name: 'Shackleton', x: 10, z: -15, color: 0xff3b30, lat: -89.9, lon: 129.78 },
   camera: { fov: 50, near: 0.1, far: 5000, position: [0, 40, 80] as [number, number, number] },
 };
+
+type PaintableButton = HTMLButtonElement & { paint: (on: boolean) => void };
 
 function applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
   Object.assign(element.style, styles);
 }
 
-function createToggleButton(label: string, initial: boolean): HTMLButtonElement {
-  const button = document.createElement('button');
+function createToggleButton(label: string, initial: boolean): PaintableButton {
+  const button = document.createElement('button') as PaintableButton;
   button.type = 'button';
-  button.setAttribute('aria-pressed', String(initial));
   applyStyles(button, {
     position: 'absolute',
     top: '16px',
@@ -55,16 +62,19 @@ function createToggleButton(label: string, initial: boolean): HTMLButtonElement 
     transition: 'background 0.2s, color 0.2s',
   });
 
-  const paint = (on: boolean): void => {
+  button.paint = (on: boolean): void => {
     button.textContent = `${on ? '●' : '○'}  ${label}`;
     button.style.background = on ? '#ffffff' : 'rgba(0, 0, 0, 0.6)';
     button.style.color = on ? '#000000' : '#ffffff';
     button.setAttribute('aria-pressed', String(on));
   };
 
-  paint(initial);
-  (button as HTMLButtonElement & { paint: (on: boolean) => void }).paint = paint;
+  button.paint(initial);
   return button;
+}
+
+function formatUtc(date: Date): string {
+  return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
 export function createVisualizer(
@@ -73,6 +83,7 @@ export function createVisualizer(
 ): VisualizerResult {
   const landing = { ...DEFAULTS.landing, ...options.landing };
   const cameraConfig = { ...DEFAULTS.camera, ...options.camera };
+  const startDate = options.startDate ?? new Date();
 
   const previousPosition = container.style.position;
   const previousBackground = container.style.background;
@@ -111,14 +122,28 @@ export function createVisualizer(
     color: landing.color,
   });
 
-  const button = createToggleButton(landing.name, pin.isVisible()) as HTMLButtonElement & {
-    paint: (on: boolean) => void;
-  };
+  const button = createToggleButton(landing.name, pin.isVisible());
   const onToggle = (): void => {
     button.paint(pin.toggle());
   };
   button.addEventListener('click', onToggle);
   container.appendChild(button);
+
+  const applyDate = (date: Date): void => {
+    const h = getSunHorizontal(date, landing.lat, landing.lon);
+    sun.setHorizontal(h.azimuth, h.elevation);
+    const state = h.elevation > 0 ? 'Sol sobre el horizonte' : 'Sol bajo el horizonte';
+    timeControls.setInfo(
+      `${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
+    );
+  };
+
+  const timeControls = createTimeControls(container, {
+    initialDate: startDate,
+    onChange: applyDate,
+    findEvent: (kind, from) => findNextSunEvent(from, kind, landing.lat, landing.lon),
+  });
+  applyDate(startDate);
 
   const resize = (): void => {
     const w = Math.max(container.clientWidth, 1);
@@ -136,7 +161,7 @@ export function createVisualizer(
     const delta = Math.min((now - last) / 1000, 0.1);
     last = now;
 
-    sun.update(delta);
+    timeControls.tick(delta);
     pin.update(delta);
     land.update();
     renderer.render(scene, camera);
@@ -147,6 +172,7 @@ export function createVisualizer(
     observer.disconnect();
     button.removeEventListener('click', onToggle);
     button.remove();
+    timeControls.dispose();
     pin.dispose();
     sun.dispose();
     land.dispose();
@@ -156,5 +182,5 @@ export function createVisualizer(
     container.style.background = previousBackground;
   };
 
-  return { scene, camera, renderer, dispose };
+  return { scene, camera, renderer, setDate: (date) => timeControls.setDate(date), dispose };
 }

@@ -19,6 +19,8 @@ export interface SunResult {
   pivot: THREE.Group;
   update: (deltaSeconds: number) => void;
   setAngle: (radians: number) => void;
+  setHorizontal: (azimuthDeg: number, elevationDeg: number) => void;
+  setOrbitMode: () => void;
   getElevation: () => number;
   setPaused: (paused: boolean) => void;
   dispose: () => void;
@@ -88,15 +90,39 @@ export function createSun(scene: THREE.Scene, options: SunOptions = {}): SunResu
   scene.add(ambient);
 
   let paused = false;
+  let manual = false;
   const worldPosition = new THREE.Vector3();
 
   const update = (deltaSeconds: number): void => {
-    if (paused) return;
+    if (paused || manual) return;
     spin.rotation.y += orbitSpeed * deltaSeconds;
   };
 
   const setAngle = (radians: number): void => {
     spin.rotation.y = radians;
+  };
+
+  const setHorizontal = (azimuthDeg: number, elevationDeg: number): void => {
+    manual = true;
+    pivot.rotation.set(0, 0, 0);
+    spin.rotation.set(0, 0, 0);
+    const az = THREE.MathUtils.degToRad(azimuthDeg);
+    const el = THREE.MathUtils.degToRad(elevationDeg);
+    sun.position.set(
+      orbitRadius * Math.cos(el) * Math.sin(az),
+      orbitRadius * Math.sin(el),
+      -orbitRadius * Math.cos(el) * Math.cos(az),
+    );
+    sun.visible = elevationDeg > -1;
+    light.intensity = elevationDeg > 0 ? lightIntensity : 0;
+  };
+
+  const setOrbitMode = (): void => {
+    manual = false;
+    pivot.rotation.set(THREE.MathUtils.degToRad(inclination), 0, 0);
+    sun.position.set(orbitRadius, 0, 0);
+    sun.visible = true;
+    light.intensity = lightIntensity;
   };
 
   const getElevation = (): number => {
@@ -120,5 +146,16 @@ export function createSun(scene: THREE.Scene, options: SunOptions = {}): SunResu
     light.dispose();
   };
 
-  return { sun, light, pivot, update, setAngle, getElevation, setPaused, dispose };
+  return {
+    sun,
+    light,
+    pivot,
+    update,
+    setAngle,
+    setHorizontal,
+    setOrbitMode,
+    getElevation,
+    setPaused,
+    dispose,
+  };
 }
