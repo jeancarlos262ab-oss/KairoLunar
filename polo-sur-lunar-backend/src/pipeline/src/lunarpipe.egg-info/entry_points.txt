@@ -1,0 +1,2 @@
+[console_scripts]
+lunarpipe-build = lunarpipe.build:main

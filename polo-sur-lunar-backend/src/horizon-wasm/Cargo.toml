@@ -1,0 +1,15 @@
+[package]
+name = "horizon"
+version = "0.1.0"
+edition = "2021"
+description = "Horizon mask ray-marching and solar disk visibility library with optional WASM bindings."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+wasm = ["dep:wasm-bindgen"]
+
+[dependencies]
+wasm-bindgen = { version = "0.2", optional = true }

@@ -1,0 +1,16 @@
+numpy>=1.26
+spiceypy>=6.0
+rasterio>=1.3
+
+[dev]
+numba>=0.59
+pytest>=8
+
+[fast]
+numba>=0.59
+
+[numba]
+numba>=0.59
+
+[test]
+pytest>=8
