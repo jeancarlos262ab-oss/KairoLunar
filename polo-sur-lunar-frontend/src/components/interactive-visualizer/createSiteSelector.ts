@@ -12,7 +12,6 @@ export interface SiteSelectorOptions {
   sites: LandingSite[];
   initialSiteId: string;
   onSelect: (site: LandingSite) => void;
-  onAddToCompare: (site: LandingSite) => string | null;
 }
 
 export interface SiteSelectorResult {
@@ -46,10 +45,6 @@ export function createSiteSelector(
   label.appendChild(select);
 
   const details = element('div', { color: '#cfcfcf', lineHeight: '1.4' });
-  const notice = element('div', { color: '#ffd166', minHeight: '1em' });
-  notice.setAttribute('aria-live', 'polite');
-
-  const compareButton = makeButton('＋ Añadir a la comparación', 'Añadir el sitio seleccionado a la comparación');
 
   const customBox = element('details', { borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '8px' });
   const summary = element('summary', { cursor: 'pointer', fontWeight: '600' }, 'Coordenadas personalizadas');
@@ -78,7 +73,7 @@ export function createSiteSelector(
 
   customBody.append(latInput, lonInput, nameInput, useButton, customError);
   customBox.append(summary, customBody);
-  panel.append(label, details, compareButton, notice, customBox);
+  panel.append(label, details, customBox);
   container.appendChild(panel);
 
   const addOption = (site: LandingSite): void => {
@@ -111,7 +106,6 @@ export function createSiteSelector(
     if (!siteMap.has(site.id)) addOption(site);
     current = siteMap.get(site.id) ?? site;
     select.value = current.id;
-    notice.textContent = '';
     refreshDetails();
     if (notify) options.onSelect(current);
   };
@@ -119,10 +113,6 @@ export function createSiteSelector(
   select.addEventListener('change', () => {
     const site = siteMap.get(select.value);
     if (site) setSite(site);
-  });
-
-  compareButton.addEventListener('click', () => {
-    notice.textContent = options.onAddToCompare(current) ?? '';
   });
 
   const applyCustom = (): void => {

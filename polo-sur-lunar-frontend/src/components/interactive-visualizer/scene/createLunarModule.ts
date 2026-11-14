@@ -32,7 +32,7 @@ const DEFAULTS = {
   altitude: 28,
   descentSeconds: 10,
   holdSeconds: 8,
-  loop: true,
+  loop: false,
 };
 
 const DUST_COUNT = 180;

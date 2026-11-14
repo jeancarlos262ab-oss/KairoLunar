@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import { createLand, type LandOptions } from './scene/createLand';
 import { createSun, type SunOptions } from './scene/createSun';
 import { createEarth, type EarthOptions } from './scene/createEarth';
+import { createStars, type StarsOptions } from './scene/createStars';
 import { createLunarModule } from './scene/createLunarModule';
 import { createTimeControls } from './scene/createTimeControls';
 import { createSiteSelector } from './createSiteSelector';
-import { createSiteComparison } from './createSiteComparison';
 import { createSkyPanel } from './createSkyPanel';
 import { SITES, type LandingSite } from './sites';
 import {
@@ -26,6 +26,7 @@ export interface VisualizerOptions {
   land?: LandOptions;
   sun?: SunOptions;
   earth?: EarthOptions;
+  stars?: StarsOptions;
   camera?: {
     fov?: number;
     near?: number;
@@ -144,7 +145,11 @@ export function createVisualizer(
   renderer.domElement.style.display = 'block';
   container.appendChild(renderer.domElement);
 
-  const land = createLand(scene, camera, renderer.domElement, options.land);
+  const stars = createStars(scene, options.stars);
+  const land = createLand(scene, camera, renderer.domElement, {
+    ...options.land,
+    clearZone: { x: landing.x, z: landing.z, radius: 8 },
+  });
   const sun = createSun(scene, options.sun);
   const earth = createEarth(scene, options.earth);
   const lander = createLunarModule(scene, land.mesh, {
@@ -171,7 +176,6 @@ export function createVisualizer(
     timeControls.setInfo(
       `${currentSite.name}  ·  ${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
     );
-    comparison.setCursorDate(date);
     skyPanel.update(date);
   };
 
@@ -187,14 +191,12 @@ export function createVisualizer(
     onSelect: (site) => {
       currentSite = site;
       button.setLabel(site.name);
+      land.regenerate();
+      lander.setPosition(landing.x, landing.z);
+      lander.setVisible(true);
+      button.paint(true);
       applyDate(timeControls.getDate());
     },
-    onAddToCompare: (site) => comparison.addSite(site),
-  });
-
-  const comparison = createSiteComparison(container, {
-    getDate: () => timeControls.getDate(),
-    onSelect: (site) => selector.setSite(site),
   });
 
   const skyPanel = createSkyPanel(container, {
@@ -231,12 +233,12 @@ export function createVisualizer(
     button.removeEventListener('click', onToggle);
     button.remove();
     skyPanel.dispose();
-    comparison.dispose();
     selector.dispose();
     timeControls.dispose();
     lander.dispose();
     earth.dispose();
     sun.dispose();
+    stars.dispose();
     land.dispose();
     renderer.dispose();
     renderer.domElement.remove();

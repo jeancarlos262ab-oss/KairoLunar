@@ -9,6 +9,11 @@ export interface LandOptions {
   heightScale?: number;
   craterCount?: number;
   seed?: number;
+  clearZone?: {
+    x: number;
+    z: number;
+    radius: number;
+  };
   controls?: {
     enableZoom?: boolean;
     enablePan?: boolean;
@@ -20,6 +25,7 @@ export interface LandOptions {
 export interface LandResult {
   mesh: THREE.Mesh;
   controls: OrbitControls;
+  regenerate: (seed?: number) => number;
   update: () => void;
   dispose: () => void;
 }
@@ -88,17 +94,35 @@ interface Crater {
   depth: number;
 }
 
-function generateCraters(count: number, size: number, rng: () => number): Crater[] {
+interface ClearZone {
+  x: number;
+  z: number;
+  radius: number;
+}
+
+function generateCraters(
+  count: number,
+  size: number,
+  rng: () => number,
+  clearZone?: ClearZone,
+): Crater[] {
   const half = size / 2;
   const craters: Crater[] = [];
-  for (let i = 0; i < count; i++) {
+  let attempts = 0;
+  while (craters.length < count && attempts < count * 20) {
+    attempts++;
     const r = size * (0.015 + Math.pow(rng(), 2.5) * 0.11);
-    craters.push({
+    const crater: Crater = {
       x: (rng() * 2 - 1) * half,
       z: (rng() * 2 - 1) * half,
       radius: r,
       depth: r * (0.18 + rng() * 0.15),
-    });
+    };
+    if (clearZone) {
+      const distance = Math.hypot(crater.x - clearZone.x, crater.z - clearZone.z);
+      if (distance < crater.radius * 1.45 + clearZone.radius) continue;
+    }
+    craters.push(crater);
   }
   return craters;
 }
@@ -124,27 +148,33 @@ export function createLand(
 
   const geometry = new THREE.PlaneGeometry(size, size, segments, segments);
   geometry.rotateX(-Math.PI / 2);
-
-  const rng = createRng(seed);
-  const craters = generateCraters(craterCount, size, rng);
-  const amplitude = size * heightScale;
   const position = geometry.attributes.position as THREE.BufferAttribute;
+  const amplitude = size * heightScale;
 
-  for (let i = 0; i < position.count; i++) {
-    const x = position.getX(i);
-    const z = position.getZ(i);
+  const build = (terrainSeed: number): void => {
+    const rng = createRng(terrainSeed);
+    const craters = generateCraters(craterCount, size, rng, options.clearZone);
 
-    const hills = (fbm(x * 0.03, z * 0.03, seed) - 0.5) * 2 * amplitude;
-    const roughness = (fbm(x * 0.25, z * 0.25, seed + 7, 3) - 0.5) * amplitude * 0.08;
+    for (let i = 0; i < position.count; i++) {
+      const x = position.getX(i);
+      const z = position.getZ(i);
 
-    let h = hills + roughness;
-    for (const c of craters) h += craterHeight(c, x, z);
+      const hills = (fbm(x * 0.03, z * 0.03, terrainSeed) - 0.5) * 2 * amplitude;
+      const roughness = (fbm(x * 0.25, z * 0.25, terrainSeed + 7, 3) - 0.5) * amplitude * 0.08;
 
-    position.setY(i, h);
-  }
+      let h = hills + roughness;
+      for (const c of craters) h += craterHeight(c, x, z);
 
-  position.needsUpdate = true;
-  geometry.computeVertexNormals();
+      position.setY(i, h);
+    }
+
+    position.needsUpdate = true;
+    geometry.computeVertexNormals();
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+  };
+
+  build(seed);
 
   const material = new THREE.MeshPhongMaterial({ color, shininess });
   const mesh = new THREE.Mesh(geometry, material);
@@ -164,9 +194,16 @@ export function createLand(
   controls.maxPolarAngle = Math.PI / 2 - 0.02;
   controls.update();
 
+  const regenerate = (nextSeed?: number): number => {
+    const used = nextSeed ?? Math.floor(Math.random() * 2147483647) + 1;
+    build(used);
+    return used;
+  };
+
   return {
     mesh,
     controls,
+    regenerate,
     update: () => controls.update(),
     dispose: () => {
       controls.dispose();
