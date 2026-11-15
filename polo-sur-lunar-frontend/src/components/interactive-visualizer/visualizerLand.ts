@@ -7,6 +7,7 @@ import { createLunarModule } from './scene/createLunarModule';
 import { createTimeControls } from './scene/createTimeControls';
 import { createSiteSelector } from './createSiteSelector';
 import { createSkyPanel } from './createSkyPanel';
+import { loadSiteData } from './data/loadLunarData';
 import { SITES, type LandingSite } from './sites';
 import {
   findNextSunEvent,
@@ -27,6 +28,7 @@ export interface VisualizerOptions {
   sun?: SunOptions;
   earth?: EarthOptions;
   stars?: StarsOptions;
+  terrainExaggeration?: number;
   camera?: {
     fov?: number;
     near?: number;
@@ -47,6 +49,7 @@ export interface VisualizerResult {
 const DEFAULTS = {
   siteId: 'shackleton',
   landing: { x: 10, z: -15, color: 0xff3b30 },
+  terrainExaggeration: 1,
   camera: { fov: 50, near: 0.1, far: 5000, position: [0, 40, 80] as [number, number, number] },
 };
 
@@ -113,6 +116,7 @@ export function createVisualizer(
 ): VisualizerResult {
   const landing = { ...DEFAULTS.landing, ...options.landing };
   const cameraConfig = { ...DEFAULTS.camera, ...options.camera };
+  const exaggeration = options.terrainExaggeration ?? DEFAULTS.terrainExaggeration;
   const startDate = options.startDate ?? new Date();
   let currentSite: LandingSite =
     SITES.find((site) => site.id === (options.siteId ?? DEFAULTS.siteId)) ?? SITES[0];
@@ -165,6 +169,29 @@ export function createVisualizer(
   button.addEventListener('click', onToggle);
   container.appendChild(button);
 
+  let terrainToken = 0;
+  let disposed = false;
+
+  const applySiteTerrain = async (site: LandingSite, regenerateIfMissing: boolean): Promise<void> => {
+    terrainToken += 1;
+    const token = terrainToken;
+    const data = await loadSiteData(site.id);
+    if (disposed || token !== terrainToken) return;
+
+    if (data.terrain) {
+      land.setTerrain(data.terrain, exaggeration);
+      lander.setPosition(0, 0);
+    } else if (regenerateIfMissing) {
+      land.regenerate();
+      lander.setPosition(landing.x, landing.z);
+    } else {
+      return;
+    }
+
+    lander.setVisible(true);
+    button.paint(true);
+  };
+
   const applyDate = (date: Date): void => {
     const h = getSunHorizontal(date, currentSite.lat, currentSite.lon);
     sun.setHorizontal(h.azimuth, h.elevation);
@@ -191,10 +218,7 @@ export function createVisualizer(
     onSelect: (site) => {
       currentSite = site;
       button.setLabel(site.name);
-      land.regenerate();
-      lander.setPosition(landing.x, landing.z);
-      lander.setVisible(true);
-      button.paint(true);
+      void applySiteTerrain(site, true);
       applyDate(timeControls.getDate());
     },
   });
@@ -204,6 +228,7 @@ export function createVisualizer(
   });
 
   applyDate(startDate);
+  void applySiteTerrain(currentSite, false);
 
   const resize = (): void => {
     const w = Math.max(container.clientWidth, 1);
@@ -228,6 +253,7 @@ export function createVisualizer(
   });
 
   const dispose = (): void => {
+    disposed = true;
     renderer.setAnimationLoop(null);
     observer.disconnect();
     button.removeEventListener('click', onToggle);
