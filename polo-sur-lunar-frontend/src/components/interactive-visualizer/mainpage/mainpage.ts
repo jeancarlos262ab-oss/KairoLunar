@@ -2,6 +2,7 @@ import './mainpage.css';
 import { createMoonScene, type MoonScene } from './moonScene';
 import { createVisualizer, type VisualizerResult } from '../visualizerLand';
 import { getLang, setLang, type Lang } from '../i18n';
+import { createInfoModal, infoButtonLabel } from './createInfoModal';
 
 const T = {
   es: {
@@ -194,6 +195,9 @@ export function createMainPage(container: HTMLElement): MainPageResult {
   root.className = 'mp';
   container.appendChild(root);
 
+  const info = createInfoModal(container);
+  info.open();
+
   let moon: MoonScene | null = null;
   let terrain: { wrap: HTMLElement; viz: VisualizerResult } | null = null;
   let leaving = false;
@@ -218,6 +222,7 @@ export function createMainPage(container: HTMLElement): MainPageResult {
       <header class="mp-header">
         <div class="mp-logo"><b>Kairo Lunar</b><span>${t.sub}</span></div>
         <div class="mp-tools">
+          <button class="mp-sq mp-info" data-info aria-label="${infoButtonLabel(lang)}" title="${infoButtonLabel(lang)}">${icon('help', 15)}</button>
           <div class="mp-seg">
             <button data-lang="en" class="${lang === 'en' ? 'on' : ''}">EN</button>
             <button data-lang="es" class="${lang === 'es' ? 'on' : ''}">ES</button>
@@ -254,6 +259,7 @@ export function createMainPage(container: HTMLElement): MainPageResult {
 
     root.querySelectorAll<HTMLElement>('[data-lang]').forEach((b) =>
       b.addEventListener('click', () => { lang = b.dataset.lang as Lang; setLang(lang); render(); }));
+    root.querySelector<HTMLElement>('[data-info]')?.addEventListener('click', () => info.open());
     closer.addEventListener('click', () => void openTerrain());
     root.querySelectorAll<HTMLElement>('[data-act]').forEach((b) =>
       b.addEventListener('click', () => moon?.zoom(b.dataset.act === 'zin' ? 0.85 : 1.18)));
@@ -264,6 +270,7 @@ export function createMainPage(container: HTMLElement): MainPageResult {
     if (terrain || busy) return;
     busy = true;
     leaving = true;
+    info.close();
     root.classList.add('leaving');
     await moon?.dive(1000); // la cámara se acerca al polo sur
     await fadeTo(1, 350);
@@ -318,6 +325,7 @@ export function createMainPage(container: HTMLElement): MainPageResult {
 
   return {
     dispose: () => {
+      info.dispose();
       moon?.dispose();
       terrain?.viz.dispose();
       terrain?.wrap.remove();

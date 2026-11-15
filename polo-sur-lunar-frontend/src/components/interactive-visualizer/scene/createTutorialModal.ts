@@ -24,23 +24,23 @@ const DEFAULT_STEPS: TutorialStep[] = [
   {
     title: 'Elige una misión',
     paragraphs: [
-      'Arriba a la izquierda abre "Sitio de aterrizaje" y escoge una misión, como IM-2 o Shackleton. La escena viaja a ese lugar y el módulo vuelve a aterrizar.',
-      'También puedes abrir "Coordenadas personalizadas" y escribir cualquier latitud y longitud.',
+      'Arriba a la izquierda abre «Sitio de aterrizaje» y escoge una misión, como IM-2 o Shackleton. La escena viaja a ese lugar y el módulo vuelve a aterrizar.',
+      'También puedes abrir «Coordenadas personalizadas» y escribir cualquier latitud y longitud.',
       'Los sitios de la lista usan datos reales de la NASA (LOLA). Si pones coordenadas fuera de la zona al sur de 80°S, el terreno será de ejemplo.',
     ],
   },
   {
     title: 'Horas de sol y amanecer',
     paragraphs: [
-      'En la barra de abajo elige la fecha y la hora (UTC), o pulsa "Reproducir" para ver pasar los días.',
-      'Los botones "Amanecer" y "Atardecer" saltan al próximo evento del Sol en ese sitio.',
-      'El panel "Sol" indica si hay luz para generar energía y cuánto falta para el siguiente amanecer o puesta. El panel "Tierra" indica si hay línea de vista para comunicarse.',
+      'En la barra de abajo elige la fecha y la hora (UTC), o pulsa «Reproducir» para ver pasar los días.',
+      'Los botones «Amanecer» y «Atardecer» saltan al próximo evento del Sol en ese sitio.',
+      'El panel «Sol» indica si hay luz para generar energía y cuánto falta para el siguiente amanecer o puesta. El panel «Tierra» indica si hay línea de vista para comunicarse.',
     ],
   },
   {
     title: 'Qué muestran las coordenadas polares',
     paragraphs: [
-      'El círculo del panel "Cielo" es el cielo visto desde arriba: el centro queda justo sobre tu cabeza y el borde es el horizonte.',
+      'El círculo del panel «Cielo» es el cielo visto desde arriba: el centro queda justo sobre tu cabeza y el borde es el horizonte.',
       'La dirección alrededor del círculo es el azimut (norte arriba, este a la derecha) y la distancia al centro indica qué tan alto está el astro: la elevación.',
       'El punto amarillo es el Sol y el azul es la Tierra. La zona gris es el relieve que tapa el cielo: si un astro cae ahí, no se ve desde el sitio.',
     ],

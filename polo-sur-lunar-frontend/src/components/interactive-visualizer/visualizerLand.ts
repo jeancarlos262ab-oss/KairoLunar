@@ -57,35 +57,6 @@ const DEFAULTS = {
   camera: { fov: 50, near: 0.1, far: 5000, position: [0, 40, 80] as [number, number, number] },
 };
 
-interface ToggleButton extends HTMLButtonElement {
-  paint: (on: boolean) => void;
-  setLabel: (label: string) => void;
-}
-
-function createToggleButton(initialLabel: string, initial: boolean): ToggleButton {
-  const button = element('button', 'kv-mission') as ToggleButton;
-  let label = initialLabel;
-  let on = initial;
-  button.type = 'button';
-
-  const render = (): void => {
-    button.textContent = `${on ? '●' : '○'}  ${label}`;
-    button.setAttribute('aria-pressed', String(on));
-  };
-
-  button.paint = (value: boolean): void => {
-    on = value;
-    render();
-  };
-  button.setLabel = (value: string): void => {
-    label = value;
-    render();
-  };
-
-  render();
-  return button;
-}
-
 function formatUtc(date: Date): string {
   return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
@@ -144,12 +115,8 @@ export function createVisualizer(
     z: landing.z,
   });
 
-  const button = createToggleButton(siteLabel(currentSite), lander.isVisible());
-  const onToggle = (): void => {
-    button.paint(lander.toggle());
-  };
-  button.addEventListener('click', onToggle);
-  container.appendChild(button);
+  const missionTitle = element('div', 'kv-mission', siteLabel(currentSite));
+  container.appendChild(missionTitle);
 
   let terrainToken = 0;
   let disposed = false;
@@ -180,6 +147,7 @@ export function createVisualizer(
     if (disposed || token !== terrainToken) return;
 
     currentHorizon = data.horizon;
+    timeControls.refreshTimeline();
     applyDate(timeControls.getDate());
 
     if (data.terrain) {
@@ -193,12 +161,18 @@ export function createVisualizer(
     }
 
     lander.setVisible(true);
-    button.paint(true);
   };
 
   const timeControls = createTimeControls(container, {
     initialDate: startDate,
     onChange: applyDate,
+    getSunSampler: () => {
+      const horizon = makeHorizonFn(currentHorizon);
+      return (sampleDate: Date): boolean => {
+        const h = getSunHorizontal(sampleDate, currentSite.lat, currentSite.lon);
+        return h.elevation > horizon(h.azimuth);
+      };
+    },
     findEvent: (kind, from) =>
       findNextSunEvent(
         from,
@@ -216,7 +190,8 @@ export function createVisualizer(
     onSelect: (site) => {
       currentSite = site;
       currentHorizon = null;
-      button.setLabel(siteLabel(site));
+      timeControls.refreshTimeline();
+      missionTitle.textContent = siteLabel(site);
       void applySiteData(site, true);
       applyDate(timeControls.getDate());
     },
@@ -234,7 +209,7 @@ export function createVisualizer(
   void applySiteData(currentSite, false);
 
   const offLang = onLangChange(() => {
-    button.setLabel(siteLabel(currentSite));
+    missionTitle.textContent = siteLabel(currentSite);
     applyDate(timeControls.getDate());
   });
 
@@ -265,8 +240,7 @@ export function createVisualizer(
     offLang();
     renderer.setAnimationLoop(null);
     observer.disconnect();
-    button.removeEventListener('click', onToggle);
-    button.remove();
+    missionTitle.remove();
     tutorial.dispose();
     modeSwitch.dispose();
     skyPanel.dispose();
