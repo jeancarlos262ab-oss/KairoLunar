@@ -238,8 +238,9 @@ export function createMainPage(container: HTMLElement): MainPageResult {
     try {
       moon = createMoonScene(q('.mp-stage'), {
         onPin: ({ visible, x, y }) => {
-          closer.style.opacity = visible && !leaving ? '1' : '0';
-          closer.style.pointerEvents = visible ? 'auto' : 'none';
+          // Si el polo queda detrás de la Luna, el botón se opaca en vez de desaparecer
+          closer.style.opacity = leaving ? '0' : visible ? '1' : '0.25';
+          closer.style.pointerEvents = visible && !leaving ? 'auto' : 'none';
           closer.style.transform = `translate(${Math.round(x - 14)}px, ${Math.round(y - 14)}px)`;
         },
       });
