@@ -7,9 +7,12 @@ import { createLunarModule } from './scene/createLunarModule';
 import { createTimeControls } from './scene/createTimeControls';
 import { createSiteSelector } from './createSiteSelector';
 import { createSkyPanel } from './createSkyPanel';
+import { element } from './ui';
 import { createTutorialModal } from './scene/createTutorialModal';
 import { loadSiteData, makeHorizonFn, type HorizonProfile } from './data/loadLunarData';
-import { SITES, type LandingSite } from './sites';
+import { SITES, siteLabel, type LandingSite } from './sites';
+import { getMode, onLangChange, tr } from './i18n';
+import { createModeSwitch } from './createModeSwitch';
 import {
   findNextSunEvent,
   getEarthHorizontal,
@@ -54,59 +57,6 @@ const DEFAULTS = {
   camera: { fov: 50, near: 0.1, far: 5000, position: [0, 40, 80] as [number, number, number] },
 };
 
-interface ToggleButton extends HTMLButtonElement {
-  paint: (on: boolean) => void;
-  setLabel: (label: string) => void;
-}
-
-function applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
-  Object.assign(element.style, styles);
-}
-
-function createToggleButton(initialLabel: string, initial: boolean): ToggleButton {
-  const button = document.createElement('button') as ToggleButton;
-  let label = initialLabel;
-  let on = initial;
-  button.type = 'button';
-  applyStyles(button, {
-    position: 'absolute',
-    top: '16px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    padding: '10px 22px',
-    border: '1px solid #ffffff',
-    borderRadius: '999px',
-    font: '600 14px system-ui, sans-serif',
-    letterSpacing: '0.04em',
-    cursor: 'pointer',
-    zIndex: '10',
-    transition: 'background 0.2s, color 0.2s',
-    maxWidth: '30%',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  });
-
-  const render = (): void => {
-    button.textContent = `${on ? '●' : '○'}  ${label}`;
-    button.style.background = on ? '#ffffff' : 'rgba(0, 0, 0, 0.6)';
-    button.style.color = on ? '#000000' : '#ffffff';
-    button.setAttribute('aria-pressed', String(on));
-  };
-
-  button.paint = (value: boolean): void => {
-    on = value;
-    render();
-  };
-  button.setLabel = (value: string): void => {
-    label = value;
-    render();
-  };
-
-  render();
-  return button;
-}
-
 function formatUtc(date: Date): string {
   return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
@@ -123,6 +73,7 @@ export function createVisualizer(
     SITES.find((site) => site.id === (options.siteId ?? DEFAULTS.siteId)) ?? SITES[0];
   let currentHorizon: HorizonProfile | null = null;
 
+  container.classList.add('kv');
   const previousPosition = container.style.position;
   const previousBackground = container.style.background;
   if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
@@ -164,12 +115,8 @@ export function createVisualizer(
     z: landing.z,
   });
 
-  const button = createToggleButton(currentSite.name, lander.isVisible());
-  const onToggle = (): void => {
-    button.paint(lander.toggle());
-  };
-  button.addEventListener('click', onToggle);
-  container.appendChild(button);
+  const missionTitle = element('div', 'kv-mission', siteLabel(currentSite));
+  container.appendChild(missionTitle);
 
   let terrainToken = 0;
   let disposed = false;
@@ -183,10 +130,12 @@ export function createVisualizer(
     earth.setHorizontal(e.azimuth, e.elevation, horizon(e.azimuth));
     earth.setSunDirection(h.azimuth, h.elevation);
     earth.setDate(date);
-    const state = h.elevation > sunHorizon ? 'Sol sobre el horizonte' : 'Sol bajo el horizonte';
-    const horizonText = currentHorizon ? `  ·  Horizonte ${sunHorizon.toFixed(1)}°` : '';
+    const state = tr(h.elevation > sunHorizon ? 'Sol sobre el horizonte' : 'Sol bajo el horizonte');
+    const horizonText = currentHorizon ? `  ·  ${tr('Horizonte')} ${sunHorizon.toFixed(1)}°` : '';
     timeControls.setInfo(
-      `${currentSite.name}  ·  ${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°${horizonText}  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
+      getMode() === 'basic'
+        ? `${siteLabel(currentSite)}  ·  ${formatUtc(date)}  ·  ${state}`
+        : `${siteLabel(currentSite)}  ·  ${formatUtc(date)}  ·  ${tr('Elevación solar')} ${h.elevation.toFixed(1)}°  ·  ${tr('Azimut')} ${h.azimuth.toFixed(0)}°${horizonText}  ·  ${state}  ·  ${tr('Edad lunar')} ${getMoonAgeDays(date).toFixed(1)} d`,
     );
     skyPanel.update(date);
   };
@@ -198,6 +147,7 @@ export function createVisualizer(
     if (disposed || token !== terrainToken) return;
 
     currentHorizon = data.horizon;
+    timeControls.refreshTimeline();
     applyDate(timeControls.getDate());
 
     if (data.terrain) {
@@ -211,12 +161,18 @@ export function createVisualizer(
     }
 
     lander.setVisible(true);
-    button.paint(true);
   };
 
   const timeControls = createTimeControls(container, {
     initialDate: startDate,
     onChange: applyDate,
+    getSunSampler: () => {
+      const horizon = makeHorizonFn(currentHorizon);
+      return (sampleDate: Date): boolean => {
+        const h = getSunHorizontal(sampleDate, currentSite.lat, currentSite.lon);
+        return h.elevation > horizon(h.azimuth);
+      };
+    },
     findEvent: (kind, from) =>
       findNextSunEvent(
         from,
@@ -234,7 +190,8 @@ export function createVisualizer(
     onSelect: (site) => {
       currentSite = site;
       currentHorizon = null;
-      button.setLabel(site.name);
+      timeControls.refreshTimeline();
+      missionTitle.textContent = siteLabel(site);
       void applySiteData(site, true);
       applyDate(timeControls.getDate());
     },
@@ -245,10 +202,16 @@ export function createVisualizer(
     getHorizon: () => currentHorizon,
   });
 
+  const modeSwitch = createModeSwitch(container);
   const tutorial = createTutorialModal(container);
 
   applyDate(startDate);
   void applySiteData(currentSite, false);
+
+  const offLang = onLangChange(() => {
+    missionTitle.textContent = siteLabel(currentSite);
+    applyDate(timeControls.getDate());
+  });
 
   const resize = (): void => {
     const w = Math.max(container.clientWidth, 1);
@@ -274,11 +237,12 @@ export function createVisualizer(
 
   const dispose = (): void => {
     disposed = true;
+    offLang();
     renderer.setAnimationLoop(null);
     observer.disconnect();
-    button.removeEventListener('click', onToggle);
-    button.remove();
+    missionTitle.remove();
     tutorial.dispose();
+    modeSwitch.dispose();
     skyPanel.dispose();
     selector.dispose();
     timeControls.dispose();
@@ -291,6 +255,7 @@ export function createVisualizer(
     renderer.domElement.remove();
     container.style.position = previousPosition;
     container.style.background = previousBackground;
+    container.classList.remove('kv');
   };
 
   return {

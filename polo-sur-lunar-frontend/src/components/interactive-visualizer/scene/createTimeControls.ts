@@ -1,9 +1,14 @@
+import { getLang, onLangChange, tr } from '../i18n';
+import { element, makeButton } from '../ui';
+
 export type TimeEventKind = 'sunrise' | 'sunset';
+export type SunSampler = (date: Date) => boolean;
 
 export interface TimeControlsOptions {
   initialDate: Date;
   onChange: (date: Date) => void;
   findEvent: (kind: TimeEventKind, from: Date) => Date | null;
+  getSunSampler?: () => SunSampler;
 }
 
 export interface TimeControlsResult {
@@ -12,6 +17,7 @@ export interface TimeControlsResult {
   setDate: (date: Date) => void;
   setInfo: (text: string) => void;
   tick: (deltaSeconds: number) => void;
+  refreshTimeline: () => void;
   dispose: () => void;
 }
 
@@ -22,34 +28,30 @@ const SPEEDS = [
   { label: '3 días/s', seconds: 259200 },
   { label: '7 días/s', seconds: 604800 },
 ];
+const SPANS = [
+  { label: '1 día lunar (29,5 d)', days: 29.530588 },
+  { label: '3 meses (91 d)', days: 91 },
+  { label: '1 año (365 d)', days: 365 },
+];
 const DEFAULT_SPEED_INDEX = 2;
-const SLIDER_RANGE_HOURS = 360;
+const DEFAULT_SPAN_INDEX = 0;
+const STRIP_WIDTH = 720;
+const STRIP_HEIGHT = 12;
+const LIT_COLOR = '#ffd24a';
+const NIGHT_COLOR = '#141414';
 const HOUR_MS = 3600000;
 const DAY_MS = 86400000;
 
-function applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
-  Object.assign(element.style, styles);
-}
-
-function makeButton(label: string, ariaLabel: string): HTMLButtonElement {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.textContent = label;
-  button.setAttribute('aria-label', ariaLabel);
-  applyStyles(button, {
-    padding: '6px 12px',
-    border: '1px solid rgba(255,255,255,0.6)',
-    borderRadius: '6px',
-    background: 'rgba(0,0,0,0.5)',
-    color: '#ffffff',
-    font: '600 13px system-ui, sans-serif',
-    cursor: 'pointer',
-  });
-  return button;
-}
-
 function toInputValue(date: Date): string {
   return date.toISOString().slice(0, 16);
+}
+
+function toDayLabel(ms: number): string {
+  return new Date(ms).toISOString().slice(0, 10);
+}
+
+function floorDay(ms: number): number {
+  return Math.floor(ms / DAY_MS) * DAY_MS;
 }
 
 export function createTimeControls(
@@ -57,140 +59,247 @@ export function createTimeControls(
   options: TimeControlsOptions,
 ): TimeControlsResult {
   let date = new Date(options.initialDate.getTime());
-  let anchorMs = date.getTime();
+  let rangeStart = floorDay(date.getTime());
+  let spanMs = SPANS[DEFAULT_SPAN_INDEX].days * DAY_MS;
   let playing = false;
   let speedSeconds = SPEEDS[DEFAULT_SPEED_INDEX].seconds;
 
-  const panel = document.createElement('div');
+  const rangeEnd = (): number => rangeStart + spanMs;
+  const clampMs = (ms: number): number => Math.min(Math.max(ms, rangeStart), rangeEnd());
+
+  const panel = element('div', 'kv-panel kv-time');
   panel.setAttribute('role', 'group');
-  panel.setAttribute('aria-label', 'Control de fecha y hora (UTC)');
-  applyStyles(panel, {
-    position: 'absolute',
-    bottom: '16px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    width: 'min(640px, calc(100% - 32px))',
-    padding: '12px 14px',
-    background: 'rgba(0,0,0,0.72)',
-    border: '1px solid rgba(255,255,255,0.25)',
-    borderRadius: '10px',
-    color: '#ffffff',
-    font: '13px system-ui, sans-serif',
-    zIndex: '10',
-    boxSizing: 'border-box',
-  });
 
-  const info = document.createElement('div');
-  applyStyles(info, { fontWeight: '600', lineHeight: '1.4' });
+  const info = element('div', 'kv-info');
 
-  const notice = document.createElement('div');
-  applyStyles(notice, { color: '#ffd166', minHeight: '1em' });
+  const notice = element('div', 'kv-notice');
   notice.setAttribute('aria-live', 'polite');
 
-  const rowInput = document.createElement('div');
-  applyStyles(rowInput, { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' });
+  const rowInput = element('div', 'kv-row');
 
-  const dateLabel = document.createElement('label');
-  dateLabel.textContent = 'Fecha y hora (UTC)';
-  applyStyles(dateLabel, { display: 'flex', gap: '8px', alignItems: 'center' });
-
-  const dateInput = document.createElement('input');
+  const dateLabel = element('label', 'kv-row');
+  const dateInput = element('input', 'kv-field');
   dateInput.type = 'datetime-local';
-  dateInput.setAttribute('aria-label', 'Fecha y hora en UTC');
-  applyStyles(dateInput, {
-    background: '#111111',
-    color: '#ffffff',
-    border: '1px solid rgba(255,255,255,0.6)',
-    borderRadius: '6px',
-    padding: '4px 8px',
-    colorScheme: 'dark',
-  });
-  dateLabel.appendChild(dateInput);
+  const dateCaption = element('span', 'kv-muted');
+  dateLabel.append(dateCaption, dateInput);
 
-  const nowButton = makeButton('Ahora', 'Ir a la fecha y hora actuales');
+  const nowButton = makeButton('', '');
   rowInput.append(dateLabel, nowButton);
 
-  const slider = document.createElement('input');
+  const rowRange = element('div', 'kv-row kv-expert');
+
+  const startLabel = element('label', 'kv-row');
+  const startInput = element('input', 'kv-field');
+  startInput.type = 'datetime-local';
+  const startCaption = element('span', 'kv-muted');
+  startLabel.append(startCaption, startInput);
+
+  const spanLabel = element('label', 'kv-row');
+  const spanSelect = element('select', 'kv-field');
+  const spanCaption = element('span', 'kv-muted');
+  SPANS.forEach((span, index) => {
+    const option = document.createElement('option');
+    option.value = String(span.days);
+    option.textContent = span.label;
+    option.dataset.label = span.label;
+    option.selected = index === DEFAULT_SPAN_INDEX;
+    spanSelect.appendChild(option);
+  });
+  spanLabel.append(spanCaption, spanSelect);
+  rowRange.append(startLabel, spanLabel);
+
+  const strip = element('canvas', 'kv-strip');
+  strip.width = STRIP_WIDTH;
+  strip.height = STRIP_HEIGHT;
+  strip.setAttribute('role', 'img');
+  const stripCtx = strip.getContext('2d');
+
+  const slider = element('input', 'kv-range');
   slider.type = 'range';
-  slider.min = String(-SLIDER_RANGE_HOURS);
-  slider.max = String(SLIDER_RANGE_HOURS);
+  slider.min = '0';
   slider.step = '1';
   slider.value = '0';
-  slider.setAttribute('aria-label', 'Desplazamiento en horas respecto a la fecha base');
-  applyStyles(slider, { width: '100%' });
 
-  const rowButtons = document.createElement('div');
-  applyStyles(rowButtons, { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' });
+  const axis = element('div', 'kv-axis');
+  const startText = element('span');
+  const endText = element('span');
+  const legend = element('span', 'kv-legend');
+  const litSwatch = element('i', 'kv-swatch');
+  litSwatch.style.background = LIT_COLOR;
+  const nightSwatch = element('i', 'kv-swatch');
+  nightSwatch.style.background = NIGHT_COLOR;
+  const litText = document.createTextNode('');
+  const nightText = document.createTextNode('');
+  legend.append(litSwatch, litText, nightSwatch, nightText);
+  axis.append(startText, legend, endText);
 
-  const backDay = makeButton('−1 día', 'Retroceder un día');
-  const playButton = makeButton('▶ Reproducir', 'Reproducir o pausar la animación');
-  const forwardDay = makeButton('+1 día', 'Avanzar un día');
-  const sunriseButton = makeButton('☀↑ Amanecer', 'Ir al siguiente amanecer');
-  const sunsetButton = makeButton('☀↓ Atardecer', 'Ir al siguiente atardecer');
+  const summary = element('div', 'kv-muted');
+  let litPercent = 0;
+  let longestNightHours = 0;
 
-  const speedSelect = document.createElement('select');
-  speedSelect.setAttribute('aria-label', 'Velocidad de la animación');
-  applyStyles(speedSelect, {
-    background: '#111111',
-    color: '#ffffff',
-    border: '1px solid rgba(255,255,255,0.6)',
-    borderRadius: '6px',
-    padding: '5px 8px',
-    colorScheme: 'dark',
-  });
+  const formatLongest = (hours: number): string => {
+    const value = hours >= 24 ? `${(hours / 24).toFixed(1)} d` : `${hours} h`;
+    return getLang() === 'es' ? value.replace('.', ',') : value;
+  };
+
+  const renderSummary = (): void => {
+    summary.textContent = `${tr('Con luz del Sol')}: ${litPercent} % · ${tr('Noche continua más larga')}: ${formatLongest(longestNightHours)}`;
+  };
+
+  const rowButtons = element('div', 'kv-row');
+
+  const backDay = makeButton('', '');
+  const playButton = makeButton('', '');
+  const forwardDay = makeButton('', '');
+  const sunriseButton = makeButton('', '');
+  const sunsetButton = makeButton('', '');
+
+  const speedSelect = element('select', 'kv-field kv-expert');
   SPEEDS.forEach((speed, index) => {
     const option = document.createElement('option');
     option.value = String(speed.seconds);
     option.textContent = speed.label;
+    option.dataset.label = speed.label;
     option.selected = index === DEFAULT_SPEED_INDEX;
     speedSelect.appendChild(option);
   });
 
   rowButtons.append(backDay, playButton, forwardDay, speedSelect, sunriseButton, sunsetButton);
-  panel.append(info, notice, rowInput, slider, rowButtons);
+  panel.append(info, notice, rowInput, rowRange, strip, slider, axis, summary, rowButtons);
   container.appendChild(panel);
+
+  const drawTimeline = (): void => {
+    if (!stripCtx) return;
+    const sampler = options.getSunSampler ? options.getSunSampler() : null;
+    stripCtx.clearRect(0, 0, STRIP_WIDTH, STRIP_HEIGHT);
+    for (let i = 0; i < STRIP_WIDTH; i++) {
+      const ms = rangeStart + ((i + 0.5) / STRIP_WIDTH) * spanMs;
+      const lit = sampler ? sampler(new Date(ms)) : false;
+      stripCtx.fillStyle = lit ? LIT_COLOR : NIGHT_COLOR;
+      stripCtx.fillRect(i, 0, 1, STRIP_HEIGHT);
+    }
+    const steps = Math.max(1, Math.floor(spanMs / HOUR_MS));
+    let lit = 0;
+    let run = 0;
+    let longest = 0;
+    if (sampler) {
+      for (let i = 0; i < steps; i++) {
+        if (sampler(new Date(rangeStart + i * HOUR_MS))) {
+          lit++;
+          run = 0;
+        } else {
+          run++;
+          if (run > longest) longest = run;
+        }
+      }
+    }
+    litPercent = Math.round((lit / steps) * 100);
+    longestNightHours = longest;
+    renderSummary();
+  };
+
+  const applyRangeText = (): void => {
+    startText.textContent = `${tr('Inicio')} ${toDayLabel(rangeStart)}`;
+    endText.textContent = `${tr('Fin')} ${toDayLabel(rangeEnd())}`;
+  };
+
+  const applyRange = (): void => {
+    slider.max = String(Math.max(1, Math.floor(spanMs / HOUR_MS)));
+    if (document.activeElement !== startInput) startInput.value = toInputValue(new Date(rangeStart));
+    applyRangeText();
+    drawTimeline();
+  };
+
+  const applyLang = (): void => {
+    panel.setAttribute('aria-label', tr('Control de fecha y hora (UTC)'));
+    dateInput.setAttribute('aria-label', tr('Fecha y hora en UTC'));
+    dateCaption.textContent = tr('Fecha y hora (UTC)');
+    startInput.setAttribute('aria-label', tr('Inicio del rango en UTC'));
+    startCaption.textContent = tr('Inicio (UTC)');
+    spanSelect.setAttribute('aria-label', tr('Duración del rango'));
+    spanCaption.textContent = tr('Duración del rango');
+    spanSelect.querySelectorAll<HTMLOptionElement>('option').forEach((option) => {
+      option.textContent = tr(option.dataset.label ?? '');
+    });
+    strip.setAttribute('aria-label', tr('Franja de día y noche a lo largo del rango'));
+    slider.setAttribute('aria-label', tr('Hora dentro del rango seleccionado'));
+    litText.textContent = ` ${tr('Con luz del Sol')}   `;
+    nightText.textContent = ` ${tr('Noche')}`;
+    nowButton.textContent = tr('Ahora');
+    nowButton.setAttribute('aria-label', tr('Ir a la fecha y hora actuales'));
+    backDay.textContent = tr('−1 día');
+    backDay.setAttribute('aria-label', tr('Retroceder un día'));
+    playButton.setAttribute('aria-label', tr('Reproducir o pausar la animación'));
+    forwardDay.textContent = tr('+1 día');
+    forwardDay.setAttribute('aria-label', tr('Avanzar un día'));
+    sunriseButton.textContent = tr('☀↑ Amanecer');
+    sunriseButton.setAttribute('aria-label', tr('Ir al siguiente amanecer'));
+    sunsetButton.textContent = tr('☀↓ Atardecer');
+    sunsetButton.setAttribute('aria-label', tr('Ir al siguiente atardecer'));
+    speedSelect.setAttribute('aria-label', tr('Velocidad de la animación'));
+    speedSelect.querySelectorAll<HTMLOptionElement>('option').forEach((option) => {
+      option.textContent = tr(option.dataset.label ?? '');
+    });
+    notice.textContent = '';
+    playButton.textContent = tr(playing ? '⏸ Pausar' : '▶ Reproducir');
+    renderSummary();
+    applyRangeText();
+  };
 
   const syncUi = (): void => {
     if (document.activeElement !== dateInput) dateInput.value = toInputValue(date);
-    let hours = (date.getTime() - anchorMs) / HOUR_MS;
-    if (Math.abs(hours) > SLIDER_RANGE_HOURS) {
-      anchorMs = date.getTime();
-      hours = 0;
-    }
-    slider.value = String(Math.round(hours));
-    playButton.textContent = playing ? '⏸ Pausar' : '▶ Reproducir';
+    const hours = Math.round((date.getTime() - rangeStart) / HOUR_MS);
+    slider.value = String(Math.min(Math.max(hours, 0), Number(slider.max)));
+    playButton.textContent = tr(playing ? '⏸ Pausar' : '▶ Reproducir');
     playButton.setAttribute('aria-pressed', String(playing));
   };
 
-  const commit = (next: Date, reanchor: boolean): void => {
+  const commit = (next: Date): void => {
     date = next;
-    if (reanchor) anchorMs = next.getTime();
     notice.textContent = '';
     syncUi();
     options.onChange(date);
   };
 
-  const stopAndCommit = (next: Date, reanchor: boolean): void => {
+  const stopAndCommit = (next: Date): void => {
     playing = false;
-    commit(next, reanchor);
+    commit(next);
+  };
+
+  const placeInRange = (ms: number): Date => {
+    if (ms < rangeStart || ms > rangeEnd()) {
+      rangeStart = floorDay(ms);
+      applyRange();
+    }
+    return new Date(ms);
   };
 
   dateInput.addEventListener('change', () => {
     const ms = Date.parse(`${dateInput.value}:00Z`);
-    if (Number.isFinite(ms)) stopAndCommit(new Date(ms), true);
+    if (Number.isFinite(ms)) stopAndCommit(placeInRange(ms));
+  });
+
+  startInput.addEventListener('change', () => {
+    const ms = Date.parse(`${startInput.value}:00Z`);
+    if (!Number.isFinite(ms)) return;
+    rangeStart = ms;
+    applyRange();
+    stopAndCommit(new Date(clampMs(date.getTime())));
+  });
+
+  spanSelect.addEventListener('change', () => {
+    spanMs = Number(spanSelect.value) * DAY_MS;
+    applyRange();
+    stopAndCommit(new Date(clampMs(date.getTime())));
   });
 
   slider.addEventListener('input', () => {
-    playing = false;
-    commit(new Date(anchorMs + Number(slider.value) * HOUR_MS), false);
+    stopAndCommit(new Date(rangeStart + Number(slider.value) * HOUR_MS));
   });
 
-  nowButton.addEventListener('click', () => stopAndCommit(new Date(), true));
-  backDay.addEventListener('click', () => stopAndCommit(new Date(date.getTime() - DAY_MS), false));
-  forwardDay.addEventListener('click', () => stopAndCommit(new Date(date.getTime() + DAY_MS), false));
+  nowButton.addEventListener('click', () => stopAndCommit(placeInRange(Date.now())));
+  backDay.addEventListener('click', () => stopAndCommit(new Date(clampMs(date.getTime() - DAY_MS))));
+  forwardDay.addEventListener('click', () => stopAndCommit(new Date(clampMs(date.getTime() + DAY_MS))));
 
   playButton.addEventListener('click', () => {
     playing = !playing;
@@ -203,30 +312,52 @@ export function createTimeControls(
 
   const jump = (kind: TimeEventKind): void => {
     const found = options.findEvent(kind, date);
-    if (found) {
-      stopAndCommit(found, false);
-    } else {
-      playing = false;
+    playing = false;
+    if (!found) {
       syncUi();
-      notice.textContent = `No hay ${kind === 'sunrise' ? 'amanecer' : 'atardecer'} en los próximos 32 días en este sitio.`;
+      notice.textContent = tr(
+        kind === 'sunrise'
+          ? 'No hay amanecer en los próximos 32 días en este sitio.'
+          : 'No hay atardecer en los próximos 32 días en este sitio.',
+      );
+      return;
     }
+    if (found.getTime() > rangeEnd()) {
+      syncUi();
+      notice.textContent = tr(
+        kind === 'sunrise'
+          ? 'El próximo amanecer queda fuera del rango.'
+          : 'El próximo atardecer queda fuera del rango.',
+      );
+      return;
+    }
+    commit(found);
   };
   sunriseButton.addEventListener('click', () => jump('sunrise'));
   sunsetButton.addEventListener('click', () => jump('sunset'));
 
+  applyRange();
+  applyLang();
   syncUi();
+  const offLang = onLangChange(applyLang);
 
   return {
     element: panel,
     getDate: () => new Date(date.getTime()),
-    setDate: (next) => commit(new Date(next.getTime()), true),
+    setDate: (next) => commit(placeInRange(next.getTime())),
     setInfo: (text) => {
       info.textContent = text;
     },
     tick: (deltaSeconds) => {
       if (!playing) return;
-      commit(new Date(date.getTime() + speedSeconds * deltaSeconds * 1000), false);
+      let nextMs = date.getTime() + speedSeconds * deltaSeconds * 1000;
+      if (nextMs >= rangeEnd()) nextMs = rangeStart + ((nextMs - rangeStart) % spanMs);
+      commit(new Date(nextMs));
     },
-    dispose: () => panel.remove(),
+    refreshTimeline: drawTimeline,
+    dispose: () => {
+      offLang();
+      panel.remove();
+    },
   };
 }

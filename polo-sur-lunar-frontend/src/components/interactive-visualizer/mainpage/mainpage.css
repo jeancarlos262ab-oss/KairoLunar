@@ -1,0 +1,70 @@
+@import url('https://fonts.googleapis.com/css2?family=Michroma&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+.mp, .mp * { box-sizing: border-box; }
+.mp {
+  position: fixed; inset: 0; background: #000; color: #eee; overflow: hidden;
+  font: 11px 'Space Grotesk', system-ui, sans-serif;
+}
+.mp button { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0; }
+.mp-stage { position: absolute; inset: 0; }
+
+/* Header */
+.mp-header { position: absolute; top: 0; left: 0; right: 0; height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 26px; pointer-events: none; z-index: 5; }
+.mp-header > * { pointer-events: auto; }
+.mp-logo { display: flex; align-items: center; gap: 9px; font: 17px 'Michroma', sans-serif; letter-spacing: .08em; }
+.mp-logo span { font-size: 7px; color: #9a9a9a; border-left: 1px solid #333; padding-left: 10px; margin-left: 4px; letter-spacing: .15em; }
+.mp-tools { display: flex; gap: 8px; align-items: center; }
+.mp-seg { display: flex; border: 1px solid #444; height: 26px; background: rgba(0,0,0,.6); }
+.mp-seg button { padding: 0 14px; font: 8px 'Michroma', sans-serif; color: #ccc; letter-spacing: .08em; }
+.mp-seg button.on { background: #fff; color: #000; }
+.mp .mp-sq { width: 28px; height: 28px; border: 1px solid #444; display: grid; place-items: center; color: #ddd; background: rgba(0,0,0,.6); }
+.mp .mp-sq:hover { color: #fff; border-color: #888; }
+
+/* Botón "ver más de cerca" anclado al polo sur */
+.mp-closer { position: absolute; left: 0; top: 0; z-index: 4; display: flex; align-items: center; gap: 0; height: 26px; transition: opacity .2s; }
+.mp-closer .dot { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #ddd; background: #2b2f33; display: grid; place-items: center; margin-right: -2px; z-index: 1; }
+.mp-closer .dot i { width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+.mp-closer em { font-style: normal; font: 9px 'Michroma', sans-serif; letter-spacing: .08em; background: rgba(0,0,0,.85); border: 1px solid #333; padding: 7px 12px 7px 14px; white-space: nowrap; margin-top: 4px; }
+.mp-closer:hover em { border-color: #fff; }
+
+/* Zoom */
+.mp-zoom { position: absolute; bottom: 24px; right: 26px; display: flex; flex-direction: column; gap: 6px; z-index: 5; }
+.mp .mp-mini { width: 36px; height: 36px; display: grid; place-items: center; color: #ddd; border: 1px solid #444; background: rgba(5,5,5,.9); }
+.mp .mp-mini:hover { color: #fff; border-color: #fff; }
+
+/* Vista de terreno */
+.mp-terrain { position: fixed; inset: 0; background: #000; z-index: 20; }
+.mp-terrain .mp-back { position: absolute; top: 14px; right: 14px; z-index: 40; display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: rgba(0,0,0,.8); border: 1px solid #fff; color: #fff; font: 9px 'Michroma', sans-serif; letter-spacing: .1em; cursor: pointer; }
+.mp-terrain .mp-back:hover { background: #fff; color: #000; }
+
+@media (max-width: 760px) {
+  .mp-header { padding: 0 12px; }
+  .mp-logo span { display: none; }
+  .mp-tools .mp-sq { display: none; }
+  .mp-tools .mp-sq.mp-info { display: grid; }
+}
+
+/* Transiciones */
+.mp-fade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 60; transition: opacity .4s ease; }
+.mp .mp-header, .mp .mp-zoom { transition: opacity .35s ease; }
+.mp.leaving .mp-header, .mp.leaving .mp-zoom { opacity: 0; pointer-events: none; }
+.mp-closer { transition: opacity .3s ease; }
+
+/* Modal de bienvenida */
+.mp-modal, .mp-modal * { box-sizing: border-box; }
+.mp-modal { position: fixed; inset: 0; z-index: 50; display: none; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,.72); color: #eee; font: 11px 'Space Grotesk', system-ui, sans-serif; }
+.mp-modal.open { display: flex; }
+.mp-modal button { background: none; border: 0; color: inherit; font: inherit; cursor: pointer; padding: 0; }
+.mp-modal :focus-visible { outline: 1px solid #fff; outline-offset: 2px; }
+.mp-dialog { display: flex; flex-direction: column; gap: 18px; width: 100%; max-width: 520px; max-height: 100%; overflow-y: auto; padding: 24px 26px; background: #000; border: 1px solid #444; }
+.mp-dialog-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.mp-dialog h2 { margin: 0; font: 400 15px/1.5 'Michroma', sans-serif; letter-spacing: .08em; }
+.mp-dialog h3 { margin: 0 0 10px; font: 400 9px 'Michroma', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: #9a9a9a; }
+.mp-dialog p { margin: 0 0 8px; font-size: 13px; line-height: 1.6; color: #bdbdbd; }
+.mp-dialog ol { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 8px; font-size: 13px; line-height: 1.6; color: #d0d0d0; }
+.mp-dialog-section { border-top: 1px solid #222; padding-top: 16px; }
+.mp-modal .mp-dialog-x { flex: none; width: 28px; height: 28px; border: 1px solid #444; display: grid; place-items: center; color: #ddd; background: rgba(0,0,0,.6); }
+.mp-modal .mp-dialog-x:hover { color: #fff; border-color: #888; }
+.mp-dialog-actions { display: flex; justify-content: flex-end; border-top: 1px solid #222; padding-top: 16px; }
+.mp-modal .mp-dialog-go { padding: 10px 16px; border: 1px solid #fff; background: rgba(0,0,0,.8); color: #fff; font: 9px 'Michroma', sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.mp-modal .mp-dialog-go:hover { background: #fff; color: #000; }

@@ -1,4 +1,5 @@
-import { applyStyles, element, makeButton } from '../ui';
+import { onLangChange, tr } from '../i18n';
+import { element, makeButton } from '../ui';
 
 export interface TutorialStep {
   title: string;
@@ -23,9 +24,9 @@ const DEFAULT_STEPS: TutorialStep[] = [
   {
     title: 'Elige una misión',
     paragraphs: [
-      'Arriba a la izquierda abre «Sitio de aterrizaje» y escoge una misión, como IM-2 o Apolo 11. La escena viaja a ese lugar y el módulo vuelve a aterrizar.',
+      'Arriba a la izquierda abre «Sitio de aterrizaje» y escoge una misión, como IM-2 o Shackleton. La escena viaja a ese lugar y el módulo vuelve a aterrizar.',
       'También puedes abrir «Coordenadas personalizadas» y escribir cualquier latitud y longitud.',
-      'Los sitios cercanos al polo sur usan relieve real medido por la NASA (LOLA); los demás muestran un terreno de ejemplo.',
+      'Los sitios de la lista usan datos reales de la NASA (LOLA). Si pones coordenadas fuera de la zona al sur de 80°S, el terreno será de ejemplo.',
     ],
   },
   {
@@ -79,116 +80,48 @@ export function createTutorialModal(
   let isOpen = false;
   let previousFocus: HTMLElement | null = null;
 
-  const helpButton = makeButton('?', 'Abrir el instructivo');
-  applyStyles(helpButton, {
-    position: 'absolute',
-    left: '16px',
-    bottom: '16px',
-    width: '36px',
-    height: '36px',
-    padding: '0',
-    borderRadius: '50%',
-    fontSize: '16px',
-    zIndex: '10',
-  });
-  helpButton.title = 'Cómo usar el visualizador';
+  const helpButton = makeButton('?', '', 'kv-sq kv-help');
 
-  const overlay = element('div', {
-    position: 'absolute',
-    top: '0',
-    left: '0',
-    width: '100%',
-    height: '100%',
-    display: 'none',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'rgba(0,0,0,0.7)',
-    padding: '16px',
-    boxSizing: 'border-box',
-    zIndex: '100',
-  });
+  const overlay = element('div', 'kv-modal');
 
-  const dialog = element('div', {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '14px',
-    width: '100%',
-    maxWidth: '440px',
-    maxHeight: '100%',
-    overflowY: 'auto',
-    padding: '20px 22px',
-    background: '#0b1020',
-    border: '1px solid rgba(255,255,255,0.35)',
-    borderRadius: '12px',
-    color: '#ffffff',
-    font: '14px/1.5 system-ui, sans-serif',
-    boxSizing: 'border-box',
-  });
+  const dialog = element('div', 'kv-dialog');
   dialog.setAttribute('role', 'dialog');
   dialog.setAttribute('aria-modal', 'true');
   dialog.setAttribute('aria-labelledby', titleId);
   dialog.setAttribute('aria-describedby', bodyId);
 
-  const stepLabel = element('div', {
-    color: '#9db4ff',
-    font: '600 12px system-ui, sans-serif',
-    letterSpacing: '0.06em',
-    textTransform: 'uppercase',
-  });
-  const closeButton = makeButton('✕', 'Cerrar el instructivo');
-  applyStyles(closeButton, { padding: '2px 8px' });
-  const topRow = element('div', {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  });
+  const stepLabel = element('div', 'kv-step');
+  const closeButton = makeButton('✕', '', 'kv-sq');
+  const topRow = element('div', 'kv-dialog-top');
   topRow.append(stepLabel, closeButton);
 
-  const title = element('h2', { margin: '0', font: '700 20px system-ui, sans-serif' });
+  const title = element('h2');
   title.id = titleId;
 
-  const body = element('div', { display: 'flex', flexDirection: 'column', gap: '10px' });
+  const body = element('div', 'kv-dialog-body');
   body.id = bodyId;
   body.setAttribute('aria-live', 'polite');
 
   const dots = steps.map(() => {
-    const dot = element('span', {
-      width: '8px',
-      height: '8px',
-      borderRadius: '50%',
-      display: 'inline-block',
-    });
+    const dot = element('span', 'kv-step-dot');
     dot.setAttribute('aria-hidden', 'true');
     return dot;
   });
-  const dotsRow = element('div', { display: 'flex', gap: '6px', justifyContent: 'center' });
+  const dotsRow = element('div', 'kv-steps');
   dotsRow.append(...dots);
 
-  const rememberLabel = element('label', {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '6px',
-    color: '#cfcfcf',
-    font: '12px system-ui, sans-serif',
-    cursor: 'pointer',
-  });
+  const rememberLabel = element('label', 'kv-check');
   const remember = document.createElement('input');
   remember.type = 'checkbox';
-  rememberLabel.append(remember, document.createTextNode('No volver a mostrar al iniciar'));
+  const rememberText = document.createTextNode('');
+  rememberLabel.append(remember, rememberText);
 
-  const back = makeButton('Atrás', 'Paso anterior');
-  const next = makeButton('Siguiente', 'Paso siguiente');
-  applyStyles(next, { background: '#ffffff', color: '#000000', borderColor: '#ffffff' });
-  const nav = element('div', { display: 'flex', gap: '8px' });
+  const back = makeButton('', '');
+  const next = makeButton('', '', 'kv-btn strong');
+  const nav = element('div', 'kv-nav');
   nav.append(back, next);
 
-  const footer = element('div', {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '12px',
-    flexWrap: 'wrap',
-  });
+  const footer = element('div', 'kv-dialog-footer');
   footer.append(rememberLabel, nav);
 
   dialog.append(topRow, title, body, dotsRow, footer);
@@ -198,25 +131,29 @@ export function createTutorialModal(
   const render = (): void => {
     const step = steps[index];
     const isLast = index === steps.length - 1;
-    stepLabel.textContent = `Paso ${index + 1} de ${steps.length}`;
-    title.textContent = step.title;
-    body.replaceChildren(...step.paragraphs.map((text) => element('p', { margin: '0' }, text)));
-    dots.forEach((dot, i) => {
-      dot.style.background = i === index ? '#ffffff' : 'rgba(255,255,255,0.3)';
-    });
+    helpButton.setAttribute('aria-label', tr('Abrir el instructivo'));
+    helpButton.title = tr('Cómo usar el visualizador');
+    closeButton.setAttribute('aria-label', tr('Cerrar el instructivo'));
+    rememberText.textContent = tr('No volver a mostrar al iniciar');
+    back.textContent = tr('Atrás');
+    back.setAttribute('aria-label', tr('Paso anterior'));
+    stepLabel.textContent = `${tr('Paso')} ${index + 1} ${tr('de')} ${steps.length}`;
+    title.textContent = tr(step.title);
+    body.replaceChildren(...step.paragraphs.map((text) => element('p', '', tr(text))));
+    dots.forEach((dot, i) => dot.classList.toggle('on', i === index));
     back.style.visibility = index === 0 ? 'hidden' : 'visible';
-    next.textContent = isLast ? 'Empezar' : 'Siguiente';
-    next.setAttribute('aria-label', isLast ? 'Cerrar el instructivo y empezar' : 'Paso siguiente');
+    next.textContent = tr(isLast ? 'Empezar' : 'Siguiente');
+    next.setAttribute('aria-label', tr(isLast ? 'Cerrar el instructivo y empezar' : 'Paso siguiente'));
   };
 
-    const focusableItems = (): HTMLElement[] => {
-        const nodes = dialog.querySelectorAll<HTMLElement>('button, input');
-        const items: HTMLElement[] = [];
-        nodes.forEach((item) => {
-        if (getComputedStyle(item).visibility !== 'hidden') items.push(item);
-        });
-        return items;
-    };
+  const focusableItems = (): HTMLElement[] => {
+    const nodes = dialog.querySelectorAll<HTMLElement>('button, input');
+    const items: HTMLElement[] = [];
+    nodes.forEach((item) => {
+      if (getComputedStyle(item).visibility !== 'hidden') items.push(item);
+    });
+    return items;
+  };
 
   const onKeyDown = (event: KeyboardEvent): void => {
     if (event.key === 'Escape') {
@@ -246,7 +183,7 @@ export function createTutorialModal(
     index = 0;
     remember.checked = readDismissed(storageKey);
     previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    overlay.style.display = 'flex';
+    overlay.classList.add('open');
     render();
     document.addEventListener('keydown', onKeyDown);
     next.focus();
@@ -255,7 +192,7 @@ export function createTutorialModal(
   function close(): void {
     if (!isOpen) return;
     isOpen = false;
-    overlay.style.display = 'none';
+    overlay.classList.remove('open');
     writeDismissed(storageKey, remember.checked);
     document.removeEventListener('keydown', onKeyDown);
     (previousFocus ?? helpButton).focus();
@@ -287,9 +224,13 @@ export function createTutorialModal(
   helpButton.addEventListener('click', open);
   overlay.addEventListener('click', onOverlayClick);
 
+  render();
+  const offLang = onLangChange(render);
+
   if (options.openOnStart !== false && !readDismissed(storageKey)) open();
 
   const dispose = (): void => {
+    offLang();
     document.removeEventListener('keydown', onKeyDown);
     next.removeEventListener('click', onNext);
     back.removeEventListener('click', onBack);
