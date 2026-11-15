@@ -15,5 +15,16 @@
   { "id": "change-5", "name": "Chang'e 5", "lat": 43.0576, "lon": -51.9161 },
   { "id": "change-6", "name": "Chang'e 6 (cara oculta)", "lat": -41.6385, "lon": -153.9852 },
   { "id": "chandrayaan-3", "name": "Chandrayaan-3 (Shiv Shakti)", "lat": -69.3741, "lon": 32.32 },
-  { "id": "slim", "name": "SLIM (Shioli)", "lat": -13.316, "lon": 25.251 }
+  { "id": "slim", "name": "SLIM (Shioli)", "lat": -13.316, "lon": 25.251 },
+  {"id": "nobile-rim-2", "name": "Artemis III - Nobile Rim 2", "lat": -83.9657, "lon": 57.9499},
+  {"id": "mons-mouton", "name": "Artemis III - Mons Mouton", "lat": -85.4006, "lon": 30.8514},
+  {"id": "malapert-massif", "name": "Artemis III - Malapert Massif", "lat": -85.9106, "lon": -1.1413},
+  {"id": "de-gerlache-rim-2", "name": "Artemis III - de Gerlache Rim 2", "lat": -88.1165, "lon": -63.8714},
+  {"id": "mons-mouton-plateau", "name": "Artemis III - Mons Mouton Plateau", "lat": -84.1584, "lon": 27.0871},
+  {"id": "slater-plain", "name": "Artemis III - Slater Plain", "lat": -87.2402, "lon": 125.1631},
+  {"id": "peak-near-cabeus-b", "name": "Artemis III - Peak Near Cabeus B", "lat": -83.5451, "lon": -68.4333},
+  {"id": "nobile-rim-1", "name": "Artemis III - Nobile Rim 1", "lat": -85.4099, "lon": 36.2057},
+  {"id": "haworth", "name": "Artemis III - Haworth", "lat": -86.6038, "lon": -23.5277}
+
+
 ]
