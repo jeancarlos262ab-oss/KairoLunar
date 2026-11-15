@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generated_at": "2026-11-15T03:17:16+00:00",
+  "generated_at": "2026-11-15T04:08:51+00:00",
   "moon_radius_m": 1737400.0,
   "dem_source": "LDEM_80S_80MPP_ADJ.tiff",
   "sites": [
@@ -34,16 +34,16 @@
     {
       "id": "shackleton",
       "name": "Shackleton (borde)",
-      "lat": -89.9,
-      "lon": 129.78,
+      "lat": -89.76,
+      "lon": 203.58,
       "terrain": {
         "file": "terrain/shackleton.bin",
         "size": 257,
         "extent_m": 20000.0,
         "step_m": 78.125,
-        "site_height_m": -337.9839796904712,
-        "min_m": -2548.888671875,
-        "max_m": 2061.48876953125,
+        "site_height_m": 1721.2920262461635,
+        "min_m": -4591.2783203125,
+        "max_m": 205.36695861816406,
         "dtype": "float32-le",
         "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
       },
@@ -53,9 +53,9 @@
         "max_radius_m": 150000.0,
         "azimuth_step_deg": 1.0,
         "min_reach_km": 150.0,
-        "min_deg": 4.377065406356749,
-        "max_deg": 32.84701195891976,
-        "mean_deg": 16.00572800858636
+        "min_deg": -2.6437890459370905,
+        "max_deg": 3.302565388873126,
+        "mean_deg": 0.03676075700311456
       }
     },
     {
