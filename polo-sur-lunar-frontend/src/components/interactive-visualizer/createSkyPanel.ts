@@ -5,7 +5,7 @@ import {
   type HorizonFn,
 } from './lunarEphemeris';
 import { makeHorizonFn, type HorizonProfile } from './data/loadLunarData';
-import { element, PANEL_STYLE } from './ui';
+import { element } from './ui';
 import type { SiteCategory } from './sites';
 
 export interface SkySite {
@@ -51,6 +51,7 @@ const SUN_PATH_STEPS = 48;
 const EARTH_PATH_STEP_MS = 6 * 3600 * 1000;
 const EARTH_PATH_STEPS = 113;
 const HORIZON_STEP_DEG = 2;
+const CHART_FONT = "'Space Grotesk', system-ui, sans-serif";
 
 const COLORS: Record<Body, string> = { sun: '#ffd24a', earth: '#4da3ff' };
 
@@ -78,23 +79,16 @@ function describeHorizon(profile: HorizonProfile | null, site: SkySite): string 
 export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions): SkyPanelResult {
   const caches: Record<Body, CountdownCache | null> = { sun: null, earth: null };
 
-  const panel = element('div', {
-    ...PANEL_STYLE,
-    bottom: '16px',
-    right: '16px',
-    width: '250px',
-  });
+  const panel = element('div', 'kv-panel kv-sky');
   panel.setAttribute('role', 'region');
   panel.setAttribute('aria-label', 'Posición del Sol y de la Tierra sobre el horizonte');
 
-  const title = element('div', { fontWeight: '700' });
+  const title = element('div', 'kv-title');
 
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const canvas = element('canvas', {
-    width: `${CHART_SIZE}px`,
-    height: `${CHART_SIZE}px`,
-    alignSelf: 'center',
-  });
+  const canvas = element('canvas', 'kv-canvas');
+  canvas.style.width = `${CHART_SIZE}px`;
+  canvas.style.height = `${CHART_SIZE}px`;
   canvas.width = CHART_SIZE * dpr;
   canvas.height = CHART_SIZE * dpr;
   canvas.setAttribute('role', 'img');
@@ -105,37 +99,22 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
   const ctx = canvas.getContext('2d');
 
   const buildRow = (body: Body, label: string): { root: HTMLElement; row: BodyRow } => {
-    const root = element('div', {
-      borderTop: '1px solid rgba(255,255,255,0.2)',
-      paddingTop: '6px',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '2px',
-    });
-    const head = element('div', { display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '600' });
-    const dot = element('span', {
-      width: '10px',
-      height: '10px',
-      borderRadius: '50%',
-      background: COLORS[body],
-      display: 'inline-block',
-    });
+    const root = element('div', 'kv-body');
+    const head = element('div', 'kv-body-head');
+    const dot = element('span', 'kv-dot');
+    dot.style.background = COLORS[body];
     head.append(dot, document.createTextNode(label));
-    const values = element('div', { color: '#cfcfcf' });
-    const countdown = element('div', { fontSize: '15px', fontWeight: '700', color: COLORS[body] });
-    const status = element('div', { color: '#bbbbbb', fontSize: '12px' });
+    const values = element('div', 'kv-muted');
+    const countdown = element('div', 'kv-countdown');
+    countdown.style.color = COLORS[body];
+    const status = element('div', 'kv-muted');
     root.append(head, values, countdown, status);
     return { root, row: { values, countdown, status } };
   };
 
   const sunBuilt = buildRow('sun', 'Sol');
   const earthBuilt = buildRow('earth', 'Tierra');
-  const note = element('div', {
-    borderTop: '1px solid rgba(255,255,255,0.2)',
-    paddingTop: '6px',
-    color: '#9aa0aa',
-    fontSize: '11px',
-  });
+  const note = element('div', 'kv-muted kv-sep kv-note');
   panel.append(title, canvas, sunBuilt.root, earthBuilt.root, note);
   container.appendChild(panel);
 
@@ -269,7 +248,7 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     ctx.clearRect(0, 0, CHART_SIZE, CHART_SIZE);
     const c = CHART_SIZE / 2;
 
-    ctx.fillStyle = '#05070d';
+    ctx.fillStyle = '#050505';
     ctx.beginPath();
     ctx.arc(c, c, CHART_RADIUS, 0, Math.PI * 2);
     ctx.fill();
@@ -297,7 +276,7 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     ctx.stroke();
 
     ctx.fillStyle = '#ffffff';
-    ctx.font = '600 11px system-ui, sans-serif';
+    ctx.font = `700 11px ${CHART_FONT}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('N', c, c - CHART_RADIUS - 8);
@@ -305,7 +284,7 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     ctx.fillText('E', c + CHART_RADIUS + 8, c);
     ctx.fillText('O', c - CHART_RADIUS - 8, c);
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
-    ctx.font = '9px system-ui, sans-serif';
+    ctx.font = `9px ${CHART_FONT}`;
     ctx.fillText('30°', c + 3, c - ((90 - 30) / 90) * CHART_RADIUS + 8);
     ctx.fillText('60°', c + 3, c - ((90 - 60) / 90) * CHART_RADIUS + 8);
 
@@ -355,7 +334,11 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     }
   };
 
+  let lastDate: Date | null = null;
+  let disposed = false;
+
   const update = (date: Date): void => {
+    lastDate = date;
     const site = options.getSite();
     const profile = options.getHorizon ? options.getHorizon() : null;
     const horizon = makeHorizonFn(profile);
@@ -368,5 +351,18 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     note.textContent = describeHorizon(profile, site);
   };
 
-  return { element: panel, update, dispose: () => panel.remove() };
+  if (document.fonts) {
+    void document.fonts.ready.then(() => {
+      if (!disposed && lastDate) update(lastDate);
+    });
+  }
+
+  return {
+    element: panel,
+    update,
+    dispose: () => {
+      disposed = true;
+      panel.remove();
+    },
+  };
 }

@@ -6,7 +6,7 @@ import {
   type LandingSite,
   type SiteCategory,
 } from './sites';
-import { element, FIELD_STYLE, makeButton, PANEL_STYLE } from './ui';
+import { element, makeButton } from './ui';
 
 export interface SiteSelectorOptions {
   sites: LandingSite[];
@@ -29,46 +29,41 @@ export function createSiteSelector(
   const groups = new Map<SiteCategory, HTMLOptGroupElement>();
   let current: LandingSite = options.sites.find((s) => s.id === options.initialSiteId) ?? options.sites[0];
 
-  const panel = element('div', {
-    ...PANEL_STYLE,
-    top: '16px',
-    left: '16px',
-    width: 'min(300px, calc(50% - 90px))',
-    minWidth: '240px',
-  });
+  const panel = element('div', 'kv-panel kv-selector');
   panel.setAttribute('role', 'group');
   panel.setAttribute('aria-label', 'Selección de sitio de aterrizaje');
 
-  const label = element('label', { display: 'flex', flexDirection: 'column', gap: '4px', fontWeight: '600' }, 'Sitio de aterrizaje');
-  const select = element('select', { ...FIELD_STYLE, width: '100%' });
+  const label = element('label', 'kv-stack');
+  const labelText = element('span', 'kv-title', 'Sitio de aterrizaje');
+  const select = element('select', 'kv-field kv-wide');
   select.setAttribute('aria-label', 'Sitio de aterrizaje');
-  label.appendChild(select);
+  label.append(labelText, select);
 
-  const details = element('div', { color: '#cfcfcf', lineHeight: '1.4' });
+  const details = element('div', 'kv-muted');
 
-  const customBox = element('details', { borderTop: '1px solid rgba(255,255,255,0.2)', paddingTop: '8px' });
-  const summary = element('summary', { cursor: 'pointer', fontWeight: '600' }, 'Coordenadas personalizadas');
-  const customBody = element('div', { display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '8px' });
+  const customBox = element('details', 'kv-sep');
+  const summary = element('summary', 'kv-summary', 'Coordenadas personalizadas');
+  const customBody = element('div', 'kv-stack kv-custom-body');
 
-  const latInput = element('input', { ...FIELD_STYLE, width: '100%' });
+  const latInput = element('input', 'kv-field kv-wide');
   latInput.type = 'text';
   latInput.inputMode = 'decimal';
   latInput.placeholder = 'Latitud (−90 a 90), p. ej. −85.5';
   latInput.setAttribute('aria-label', 'Latitud en grados');
 
-  const lonInput = element('input', { ...FIELD_STYLE, width: '100%' });
+  const lonInput = element('input', 'kv-field kv-wide');
   lonInput.type = 'text';
   lonInput.inputMode = 'decimal';
   lonInput.placeholder = 'Longitud (−180 a 360), p. ej. 31.2';
   lonInput.setAttribute('aria-label', 'Longitud este en grados');
 
-  const nameInput = element('input', { ...FIELD_STYLE, width: '100%' });
+  const nameInput = element('input', 'kv-field kv-wide');
   nameInput.type = 'text';
   nameInput.placeholder = 'Nombre (opcional)';
   nameInput.setAttribute('aria-label', 'Nombre del sitio personalizado');
 
-  const useButton = makeButton('Usar estas coordenadas', 'Usar las coordenadas ingresadas');
-  const customError = element('div', { color: '#ff6b6b', minHeight: '1em' });
+  const useButton = makeButton('Usar estas coordenadas', 'Usar las coordenadas ingresadas', 'kv-btn kv-wide');
+  const customError = element('div', 'kv-error');
   customError.setAttribute('aria-live', 'polite');
 
   customBody.append(latInput, lonInput, nameInput, useButton, customError);

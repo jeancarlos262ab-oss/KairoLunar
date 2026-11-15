@@ -7,6 +7,7 @@ import { createLunarModule } from './scene/createLunarModule';
 import { createTimeControls } from './scene/createTimeControls';
 import { createSiteSelector } from './createSiteSelector';
 import { createSkyPanel } from './createSkyPanel';
+import { element } from './ui';
 import { createTutorialModal } from './scene/createTutorialModal';
 import { loadSiteData, makeHorizonFn, type HorizonProfile } from './data/loadLunarData';
 import { SITES, type LandingSite } from './sites';
@@ -59,38 +60,14 @@ interface ToggleButton extends HTMLButtonElement {
   setLabel: (label: string) => void;
 }
 
-function applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
-  Object.assign(element.style, styles);
-}
-
 function createToggleButton(initialLabel: string, initial: boolean): ToggleButton {
-  const button = document.createElement('button') as ToggleButton;
+  const button = element('button', 'kv-mission') as ToggleButton;
   let label = initialLabel;
   let on = initial;
   button.type = 'button';
-  applyStyles(button, {
-    position: 'absolute',
-    top: '16px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    padding: '10px 22px',
-    border: '1px solid #ffffff',
-    borderRadius: '999px',
-    font: '600 14px system-ui, sans-serif',
-    letterSpacing: '0.04em',
-    cursor: 'pointer',
-    zIndex: '10',
-    transition: 'background 0.2s, color 0.2s',
-    maxWidth: '30%',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  });
 
   const render = (): void => {
     button.textContent = `${on ? '●' : '○'}  ${label}`;
-    button.style.background = on ? '#ffffff' : 'rgba(0, 0, 0, 0.6)';
-    button.style.color = on ? '#000000' : '#ffffff';
     button.setAttribute('aria-pressed', String(on));
   };
 
@@ -123,6 +100,7 @@ export function createVisualizer(
     SITES.find((site) => site.id === (options.siteId ?? DEFAULTS.siteId)) ?? SITES[0];
   let currentHorizon: HorizonProfile | null = null;
 
+  container.classList.add('kv');
   const previousPosition = container.style.position;
   const previousBackground = container.style.background;
   if (getComputedStyle(container).position === 'static') container.style.position = 'relative';
@@ -291,6 +269,7 @@ export function createVisualizer(
     renderer.domElement.remove();
     container.style.position = previousPosition;
     container.style.background = previousBackground;
+    container.classList.remove('kv');
   };
 
   return {

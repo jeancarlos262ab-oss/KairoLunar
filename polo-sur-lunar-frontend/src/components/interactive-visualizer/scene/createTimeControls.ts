@@ -1,3 +1,5 @@
+import { element, makeButton } from '../ui';
+
 export type TimeEventKind = 'sunrise' | 'sunset';
 
 export interface TimeControlsOptions {
@@ -27,27 +29,6 @@ const SLIDER_RANGE_HOURS = 360;
 const HOUR_MS = 3600000;
 const DAY_MS = 86400000;
 
-function applyStyles(element: HTMLElement, styles: Partial<CSSStyleDeclaration>): void {
-  Object.assign(element.style, styles);
-}
-
-function makeButton(label: string, ariaLabel: string): HTMLButtonElement {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.textContent = label;
-  button.setAttribute('aria-label', ariaLabel);
-  applyStyles(button, {
-    padding: '6px 12px',
-    border: '1px solid rgba(255,255,255,0.6)',
-    borderRadius: '6px',
-    background: 'rgba(0,0,0,0.5)',
-    color: '#ffffff',
-    font: '600 13px system-ui, sans-serif',
-    cursor: 'pointer',
-  });
-  return button;
-}
-
 function toInputValue(date: Date): string {
   return date.toISOString().slice(0, 16);
 }
@@ -61,69 +42,35 @@ export function createTimeControls(
   let playing = false;
   let speedSeconds = SPEEDS[DEFAULT_SPEED_INDEX].seconds;
 
-  const panel = document.createElement('div');
+  const panel = element('div', 'kv-panel kv-time');
   panel.setAttribute('role', 'group');
   panel.setAttribute('aria-label', 'Control de fecha y hora (UTC)');
-  applyStyles(panel, {
-    position: 'absolute',
-    bottom: '16px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px',
-    width: 'min(640px, calc(100% - 32px))',
-    padding: '12px 14px',
-    background: 'rgba(0,0,0,0.72)',
-    border: '1px solid rgba(255,255,255,0.25)',
-    borderRadius: '10px',
-    color: '#ffffff',
-    font: '13px system-ui, sans-serif',
-    zIndex: '10',
-    boxSizing: 'border-box',
-  });
 
-  const info = document.createElement('div');
-  applyStyles(info, { fontWeight: '600', lineHeight: '1.4' });
+  const info = element('div', 'kv-info');
 
-  const notice = document.createElement('div');
-  applyStyles(notice, { color: '#ffd166', minHeight: '1em' });
+  const notice = element('div', 'kv-notice');
   notice.setAttribute('aria-live', 'polite');
 
-  const rowInput = document.createElement('div');
-  applyStyles(rowInput, { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' });
+  const rowInput = element('div', 'kv-row');
 
-  const dateLabel = document.createElement('label');
-  dateLabel.textContent = 'Fecha y hora (UTC)';
-  applyStyles(dateLabel, { display: 'flex', gap: '8px', alignItems: 'center' });
-
-  const dateInput = document.createElement('input');
+  const dateLabel = element('label', 'kv-row');
+  const dateInput = element('input', 'kv-field');
   dateInput.type = 'datetime-local';
   dateInput.setAttribute('aria-label', 'Fecha y hora en UTC');
-  applyStyles(dateInput, {
-    background: '#111111',
-    color: '#ffffff',
-    border: '1px solid rgba(255,255,255,0.6)',
-    borderRadius: '6px',
-    padding: '4px 8px',
-    colorScheme: 'dark',
-  });
-  dateLabel.appendChild(dateInput);
+  dateLabel.append(element('span', 'kv-muted', 'Fecha y hora (UTC)'), dateInput);
 
   const nowButton = makeButton('Ahora', 'Ir a la fecha y hora actuales');
   rowInput.append(dateLabel, nowButton);
 
-  const slider = document.createElement('input');
+  const slider = element('input', 'kv-range');
   slider.type = 'range';
   slider.min = String(-SLIDER_RANGE_HOURS);
   slider.max = String(SLIDER_RANGE_HOURS);
   slider.step = '1';
   slider.value = '0';
   slider.setAttribute('aria-label', 'Desplazamiento en horas respecto a la fecha base');
-  applyStyles(slider, { width: '100%' });
 
-  const rowButtons = document.createElement('div');
-  applyStyles(rowButtons, { display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' });
+  const rowButtons = element('div', 'kv-row');
 
   const backDay = makeButton('−1 día', 'Retroceder un día');
   const playButton = makeButton('▶ Reproducir', 'Reproducir o pausar la animación');
@@ -131,16 +78,8 @@ export function createTimeControls(
   const sunriseButton = makeButton('☀↑ Amanecer', 'Ir al siguiente amanecer');
   const sunsetButton = makeButton('☀↓ Atardecer', 'Ir al siguiente atardecer');
 
-  const speedSelect = document.createElement('select');
+  const speedSelect = element('select', 'kv-field');
   speedSelect.setAttribute('aria-label', 'Velocidad de la animación');
-  applyStyles(speedSelect, {
-    background: '#111111',
-    color: '#ffffff',
-    border: '1px solid rgba(255,255,255,0.6)',
-    borderRadius: '6px',
-    padding: '5px 8px',
-    colorScheme: 'dark',
-  });
   SPEEDS.forEach((speed, index) => {
     const option = document.createElement('option');
     option.value = String(speed.seconds);
