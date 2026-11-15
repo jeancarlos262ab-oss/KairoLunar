@@ -2,18 +2,5 @@
   { "id": "shackleton", "name": "Shackleton (borde)", "lat": -89.76, "lon": 203.58 },
   { "id": "south-pole", "name": "Polo sur geográfico", "lat": -90, "lon": 0 },
   { "id": "im2", "name": "IM-2 Athena (Mons Mouton)", "lat": -84.79, "lon": 29.2 },
-  { "id": "im1", "name": "IM-1 Odysseus (Malapert A)", "lat": -80.13, "lon": 1.44 },
-  { "id": "blue-ghost-1", "name": "Blue Ghost 1 (Mare Crisium)", "lat": 18.562, "lon": 61.81 },
-  { "id": "apollo-11", "name": "Apolo 11", "lat": 0.6741, "lon": 23.473 },
-  { "id": "apollo-12", "name": "Apolo 12", "lat": -3.0128, "lon": -23.4219 },
-  { "id": "apollo-14", "name": "Apolo 14", "lat": -3.6453, "lon": -17.4714 },
-  { "id": "apollo-15", "name": "Apolo 15", "lat": 26.1322, "lon": 3.6333 },
-  { "id": "apollo-16", "name": "Apolo 16", "lat": -8.973, "lon": 15.5002 },
-  { "id": "apollo-17", "name": "Apolo 17", "lat": 20.1908, "lon": 30.7717 },
-  { "id": "change-3", "name": "Chang'e 3", "lat": 44.1214, "lon": -19.5117 },
-  { "id": "change-4", "name": "Chang'e 4 (cara oculta)", "lat": -45.4561, "lon": 177.5885 },
-  { "id": "change-5", "name": "Chang'e 5", "lat": 43.0576, "lon": -51.9161 },
-  { "id": "change-6", "name": "Chang'e 6 (cara oculta)", "lat": -41.6385, "lon": -153.9852 },
-  { "id": "chandrayaan-3", "name": "Chandrayaan-3 (Shiv Shakti)", "lat": -69.3741, "lon": 32.32 },
-  { "id": "slim", "name": "SLIM (Shioli)", "lat": -13.316, "lon": 25.251 }
+  { "id": "im1", "name": "IM-1 Odysseus (Malapert A)", "lat": -80.13, "lon": 1.44 }
 ]
