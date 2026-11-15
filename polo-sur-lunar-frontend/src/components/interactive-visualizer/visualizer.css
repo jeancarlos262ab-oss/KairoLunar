@@ -31,7 +31,7 @@
 .kv .kv-range::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 0; }
 .kv .kv-range::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 0; }
 
-.kv .kv-mission { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10; max-width: 60%; padding: 11px 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; border: none; background: none; color: #fff; font: 20px 'Michroma', sans-serif; letter-spacing: .1em; }
+.kv .kv-mission { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10; max-width: max(160px, calc(100% - 700px)); min-width: 0; padding: 11px 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; border: none; background: none; color: #fff; font: clamp(13px, 1.9vw, 20px) 'Michroma', sans-serif; letter-spacing: .1em; }
 
 .kv .kv-help { position: absolute; left: 14px; bottom: 14px; z-index: 10; }
 
@@ -40,7 +40,7 @@
 .kv .kv-summary:hover { color: #fff; }
 .kv .kv-custom-body { margin-top: 8px; }
 
-.kv .kv-time { bottom: 14px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100% - 32px)); gap: 6px; padding: 8px 12px; background: rgba(0,0,0,.72); }
+.kv .kv-time { bottom: 14px; left: 50%; transform: translateX(-50%); width: min(720px, calc(100% - 560px)); min-width: 320px; gap: 6px; padding: 8px 12px; background: rgba(0,0,0,.72); }
 .kv .kv-time .kv-row { gap: 6px; }
 .kv .kv-time .kv-info { font-size: 10px; line-height: 1.4; }
 .kv .kv-time .kv-field { height: 24px; }
@@ -56,7 +56,8 @@
 .kv .kv-notice { color: #ffc94d; min-height: 1em; }
 
 .kv .kv-sky { bottom: 14px; right: 14px; width: 250px; }
-.kv .kv-canvas { display: block; align-self: center; }
+.kv .kv-canvas { display: block; align-self: center; width: min(200px, 100%); height: auto; aspect-ratio: 1 / 1; }
+.kv .kv-sky .kv-title { display: flex; align-items: center; justify-content: space-between; }
 .kv .kv-body { display: flex; flex-direction: column; gap: 2px; border-top: 1px solid #333; padding-top: 6px; }
 .kv .kv-body-head { display: flex; align-items: center; gap: 6px; font-weight: 700; }
 .kv .kv-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
@@ -86,7 +87,88 @@
 
 .kv.basic .kv-expert { display: none; }
 
-@media (max-width: 760px) {
-  .kv .kv-mission { max-width: 80%; }
+/* ============ Responsive ============ */
+
+/* Tablet / laptop angosta: el panel del cielo se achica */
+@media (max-width: 1100px) {
   .kv .kv-sky { width: 220px; }
+  .kv .kv-time { width: min(720px, calc(100% - 520px)); }
+}
+
+/* Pantallas táctiles: objetivos de toque más grandes y sin zoom automático en iOS */
+@media (pointer: coarse) {
+  .kv .kv-btn, .kv .kv-time .kv-btn { height: 34px; }
+  .kv .kv-field, .kv .kv-time .kv-field { height: 36px; font-size: 16px; }
+  .kv .kv-sq { width: 36px; height: 36px; }
+  .kv .kv-mode { height: 34px; }
+  .kv .kv-range { height: 4px; margin: 10px 0; }
+  .kv .kv-range::-webkit-slider-thumb { width: 22px; height: 22px; }
+  .kv .kv-range::-moz-range-thumb { width: 22px; height: 22px; }
+}
+
+/* Panel del cielo colapsable (solo se activa en pantallas pequeñas) */
+@media (max-width: 900px), (max-height: 620px) {
+  .kv .kv-sky .kv-title { cursor: pointer; }
+  .kv .kv-sky .kv-title::after { content: '▾'; font-size: 11px; transition: transform .2s; }
+  .kv .kv-sky.collapsed .kv-title::after { transform: rotate(180deg); }
+  .kv .kv-sky.collapsed > :not(.kv-title) { display: none; }
+  .kv .kv-sky { max-height: 60vh; overflow-y: auto; }
+  .kv .kv-sky .kv-canvas { width: min(160px, 100%); }
+}
+
+/* Móvil y tablet vertical: los paneles dejan de flotar y se apilan en una cuadrícula */
+@media (max-width: 900px) {
+  .kv {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      'mission mission back'
+      'selector selector selector'
+      'help . mode'
+      'view view view'
+      'sky sky sky'
+      'time time time';
+    gap: 8px;
+    padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+    overflow: hidden;
+  }
+  .kv .kv-mission, .kv .kv-selector, .kv .kv-mode, .kv .kv-help, .kv .kv-sky, .kv .kv-time {
+    position: relative; inset: auto; transform: none; min-width: 0;
+  }
+  .kv .kv-mission { grid-area: mission; justify-self: start; max-width: 100%; padding: 6px 4px; font-size: 14px; }
+  .kv .kv-selector { grid-area: selector; justify-self: start; width: min(100%, 420px); }
+  .kv .kv-help { grid-area: help; }
+  .kv .kv-mode { grid-area: mode; justify-self: end; }
+  .kv .kv-sky { grid-area: sky; justify-self: end; width: min(100%, 340px); }
+  .kv .kv-time { grid-area: time; justify-self: center; width: min(100%, 720px); max-height: 38vh; overflow-y: auto; }
+  .kv .kv-selector .kv-muted { font-size: 10px; max-height: 3.2em; overflow: hidden; }
+  .kv .kv-dialog { padding: 18px; }
+}
+
+/* Teléfono horizontal (poca altura): versión compacta */
+@media (max-width: 900px) and (max-height: 520px) {
+  .kv {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'mission back'
+      'selector mode'
+      'help sky'
+      'view view'
+      'time time';
+  }
+  .kv .kv-selector { width: 100%; }
+  .kv .kv-selector .kv-muted, .kv .kv-selector .kv-sep { display: none; }
+  .kv .kv-time { max-height: 34vh; }
+  .kv .kv-time .kv-expert, .kv .kv-time .kv-axis, .kv .kv-time .kv-muted, .kv .kv-time .kv-strip { display: none; }
+}
+
+@media (max-width: 520px) {
+  .kv .kv-sky { width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .kv .kv-btn { padding: 0 10px; }
+  .kv .kv-mode-btn { padding: 0 10px; }
 }

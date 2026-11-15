@@ -11,5 +11,5 @@ export default function Visualizer3D() {
     return () => viz.dispose();
   }, []);
 
-  return <div ref={ref} style={{ width: '100vw', height: '100vh' }} />;
+  return <div ref={ref} style={{ width: '100%', height: '100dvh' }} />;
 }

@@ -100,6 +100,8 @@ export function createVisualizer(
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.domElement.style.display = 'block';
+  renderer.domElement.style.position = 'absolute';
+  renderer.domElement.style.inset = '0';
   container.appendChild(renderer.domElement);
 
   const stars = createStars(scene, options.stars);

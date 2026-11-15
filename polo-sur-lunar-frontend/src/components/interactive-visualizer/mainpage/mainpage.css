@@ -37,11 +37,37 @@
 .mp-terrain .mp-back { position: absolute; top: 14px; right: 14px; z-index: 40; display: flex; align-items: center; gap: 8px; padding: 9px 14px; background: rgba(0,0,0,.8); border: 1px solid #fff; color: #fff; font: 9px 'Michroma', sans-serif; letter-spacing: .1em; cursor: pointer; }
 .mp-terrain .mp-back:hover { background: #fff; color: #000; }
 
+@media (max-width: 900px) {
+  .mp-terrain.kv .mp-back { position: relative; inset: auto; grid-area: back; justify-self: end; padding: 8px 12px; }
+}
+@media (max-width: 520px) {
+  .mp-terrain.kv .mp-back .mp-back-t { display: none; }
+  .mp-terrain.kv .mp-back { padding: 9px; }
+}
+
 @media (max-width: 760px) {
-  .mp-header { padding: 0 12px; }
+  .mp-header { padding: 0 12px; height: 56px; }
+  .mp-logo { font-size: 14px; }
   .mp-logo span { display: none; }
   .mp-tools .mp-sq { display: none; }
   .mp-tools .mp-sq.mp-info { display: grid; }
+  .mp-zoom { bottom: max(16px, env(safe-area-inset-bottom)); right: max(14px, env(safe-area-inset-right)); }
+}
+@media (pointer: coarse) {
+  .mp .mp-sq, .mp-modal .mp-dialog-x { width: 36px; height: 36px; }
+  .mp-seg { height: 34px; }
+  .mp .mp-mini { width: 44px; height: 44px; }
+  .mp-closer em { padding: 10px 14px 10px 16px; }
+}
+@media (max-width: 520px) {
+  .mp-dialog { padding: 18px; gap: 14px; }
+  .mp-dialog h2 { font-size: 13px; }
+  .mp-dialog-actions { justify-content: stretch; }
+  .mp-modal .mp-dialog-go { width: 100%; }
+}
+@media (max-height: 520px) {
+  .mp-header { height: 48px; }
+  .mp-zoom { bottom: 12px; flex-direction: row; }
 }
 
 /* Transiciones */

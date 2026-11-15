@@ -87,8 +87,6 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
 
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   const canvas = element('canvas', 'kv-canvas');
-  canvas.style.width = `${CHART_SIZE}px`;
-  canvas.style.height = `${CHART_SIZE}px`;
   canvas.width = CHART_SIZE * dpr;
   canvas.height = CHART_SIZE * dpr;
   canvas.setAttribute('role', 'img');
@@ -114,6 +112,29 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
   const note = element('div', 'kv-muted kv-sep kv-note kv-expert');
   panel.append(title, canvas, sunBuilt.root, earthBuilt.root, note);
   container.appendChild(panel);
+
+  // En pantallas pequeñas el panel se colapsa y el título funciona como botón
+  const compact = window.matchMedia('(max-width: 900px), (max-height: 620px)');
+  const setCollapsed = (collapsed: boolean): void => {
+    panel.classList.toggle('collapsed', collapsed);
+    title.setAttribute('aria-expanded', String(!collapsed));
+  };
+  title.setAttribute('role', 'button');
+  title.tabIndex = 0;
+  const toggle = (): void => {
+    if (compact.matches) setCollapsed(!panel.classList.contains('collapsed'));
+  };
+  const onTitleKey = (e: KeyboardEvent): void => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggle();
+    }
+  };
+  const onCompactChange = (): void => setCollapsed(compact.matches);
+  title.addEventListener('click', toggle);
+  title.addEventListener('keydown', onTitleKey);
+  compact.addEventListener('change', onCompactChange);
+  setCollapsed(compact.matches);
 
   const getCountdown = (
     body: Body,
@@ -372,6 +393,9 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     dispose: () => {
       disposed = true;
       offLang();
+      title.removeEventListener('click', toggle);
+      title.removeEventListener('keydown', onTitleKey);
+      compact.removeEventListener('change', onCompactChange);
       panel.remove();
     },
   };

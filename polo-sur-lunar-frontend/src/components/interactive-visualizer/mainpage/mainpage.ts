@@ -295,7 +295,8 @@ export function createMainPage(container: HTMLElement): MainPageResult {
 
     const back = document.createElement('button');
     back.className = 'mp-back';
-    back.innerHTML = `${icon('chevL', 14)} ${T[lang].back}`;
+    back.innerHTML = `${icon('chevL', 14)}<span class="mp-back-t">${T[lang].back}</span>`;
+    back.setAttribute('aria-label', T[lang].back);
     back.addEventListener('click', () => void closeTerrain());
     wrap.appendChild(back);
 
