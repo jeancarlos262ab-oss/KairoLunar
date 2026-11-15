@@ -1,9 +1,63 @@
 {
   "version": 1,
-  "generated_at": "2026-11-15T04:08:51+00:00",
+  "generated_at": "2026-11-15T17:19:23+00:00",
   "moon_radius_m": 1737400.0,
   "dem_source": "LDEM_80S_80MPP_ADJ.tiff",
   "sites": [
+    {
+      "id": "de-gerlache-rim-2",
+      "name": "de Gerlache Rim 2",
+      "lat": -88.23,
+      "lon": -64.6284,
+      "terrain": {
+        "file": "terrain/de-gerlache-rim-2.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": -88.8339416511244,
+        "min_m": -1900.3306884765625,
+        "max_m": 1732.802978515625,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/de-gerlache-rim-2.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": -2.7917856628259554,
+        "max_deg": 15.323831129023851,
+        "mean_deg": 4.974323986953953
+      }
+    },
+    {
+      "id": "haworth",
+      "name": "Haworth",
+      "lat": -86.7639,
+      "lon": -22.777,
+      "terrain": {
+        "file": "terrain/haworth.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": 1628.0317059777626,
+        "min_m": -1827.5218505859375,
+        "max_m": 1042.0218505859375,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/haworth.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": -0.05577179123955911,
+        "max_deg": 5.925209071845543,
+        "mean_deg": 3.1643891679832405
+      }
+    },
     {
       "id": "im2",
       "name": "IM-2 Athena (Mons Mouton)",
@@ -32,10 +86,172 @@
       }
     },
     {
+      "id": "malapert-massif",
+      "name": "Malapert Massif",
+      "lat": -85.9948,
+      "lon": -0.2358,
+      "terrain": {
+        "file": "terrain/malapert-massif.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": 4784.770881630852,
+        "min_m": -3741.4013671875,
+        "max_m": 380.37738037109375,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/malapert-massif.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": -4.517170050095661,
+        "max_deg": 4.781854868716844,
+        "mean_deg": 1.065558244171312
+      }
+    },
+    {
+      "id": "mons-mouton-plateau",
+      "name": "Mons Mouton Plateau",
+      "lat": -84.3347,
+      "lon": 30.5923,
+      "terrain": {
+        "file": "terrain/mons-mouton-plateau.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": 5249.4750245435425,
+        "min_m": -1490.9566650390625,
+        "max_m": 349.59478759765625,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/mons-mouton-plateau.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": 1.503500580242334,
+        "max_deg": 8.975174406699269,
+        "mean_deg": 5.394862322984554
+      }
+    },
+    {
+      "id": "mons-mouton",
+      "name": "Mons Mouton",
+      "lat": -85.4266,
+      "lon": 31.7428,
+      "terrain": {
+        "file": "terrain/mons-mouton.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": 6398.160118707019,
+        "min_m": -3319.39453125,
+        "max_m": 189.97132873535156,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/mons-mouton.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": -4.852155572342145,
+        "max_deg": 7.525596821352785,
+        "mean_deg": 1.4343571707371325
+      }
+    },
+    {
+      "id": "nobile-rim-1",
+      "name": "Nobile Rim 1",
+      "lat": -85.4364,
+      "lon": 37.347,
+      "terrain": {
+        "file": "terrain/nobile-rim-1.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": 5942.409743734128,
+        "min_m": -4121.34716796875,
+        "max_m": 843.9442138671875,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/nobile-rim-1.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": -5.684580494746698,
+        "max_deg": 13.051084707318575,
+        "mean_deg": 4.96059477683291
+      }
+    },
+    {
+      "id": "nobile-rim-2",
+      "name": "Nobile Rim 2",
+      "lat": -83.9541,
+      "lon": 58.8215,
+      "terrain": {
+        "file": "terrain/nobile-rim-2.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": 1009.2116745678843,
+        "min_m": -2260.732421875,
+        "max_m": 624.1859130859375,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/nobile-rim-2.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 146.16,
+        "min_deg": -0.5444101768538682,
+        "max_deg": 7.941377022878438,
+        "mean_deg": 3.431837842402248
+      }
+    },
+    {
+      "id": "peak-near-cabeus-b",
+      "name": "Peak Near Cabeus B",
+      "lat": -83.6375,
+      "lon": -68.7495,
+      "terrain": {
+        "file": "terrain/peak-near-cabeus-b.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": 4491.543271306819,
+        "min_m": -4506.64599609375,
+        "max_m": 105.90409851074219,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/peak-near-cabeus-b.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 123.28,
+        "min_deg": -5.010556584799392,
+        "max_deg": 8.108587945818044,
+        "mean_deg": 0.3698025475729417
+      }
+    },
+    {
       "id": "shackleton",
       "name": "Shackleton (borde)",
       "lat": -89.76,
-      "lon": 203.58,
+      "lon": -156.42,
       "terrain": {
         "file": "terrain/shackleton.bin",
         "size": 257,
@@ -55,7 +271,34 @@
         "min_reach_km": 150.0,
         "min_deg": -2.6437890459370905,
         "max_deg": 3.302565388873126,
-        "mean_deg": 0.03676075700311456
+        "mean_deg": 0.036760757003110614
+      }
+    },
+    {
+      "id": "slater-plain",
+      "name": "Slater Plain",
+      "lat": -87.1637,
+      "lon": 125.5377,
+      "terrain": {
+        "file": "terrain/slater-plain.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": -30.894255799326764,
+        "min_m": -1493.6263427734375,
+        "max_m": 557.9985961914062,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/slater-plain.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": -0.28682497785954314,
+        "max_deg": 10.25078493383085,
+        "mean_deg": 4.905706543100014
       }
     },
     {
