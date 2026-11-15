@@ -61,12 +61,134 @@ function setBrowserTab(): void {
   document.head.appendChild(link);
 }
 
+// Detecta si el navegador/equipo puede crear un contexto WebGL
+function hasWebGL(): boolean {
+  try {
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl');
+    if (!gl) return false;
+    (gl as WebGLRenderingContext).getExtension('WEBGL_lose_context')?.loseContext();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Pantalla negra de aviso cuando no hay WebGL (motivo corto + botón "ver más detalles")
+function showNoWebGL(container: HTMLElement, err?: unknown): void {
+  if (container.querySelector('[data-no-webgl]')) return;
+  const es = !navigator.language.toLowerCase().startsWith('en');
+  const T = es
+    ? {
+        title: 'Kairo Lunar no pudo iniciar',
+        reason: 'Este equipo o navegador no puede crear un contexto WebGL, necesario para el funcionamiento de la aplicación.',
+        more: 'Ver más detalles',
+        less: 'Ocultar detalles',
+        tipsTitle: 'Qué puedes hacer',
+        tips: [
+          'Prueba en una computadora más potente o con tarjeta gráfica dedicada.',
+          'Usa un navegador actualizado (Chrome, Edge o Firefox).',
+          'Activa la aceleración por hardware en los ajustes del navegador.',
+          'Actualiza los controladores de video de tu equipo.',
+          'Si estás en una máquina virtual o escritorio remoto, prueba en una PC física.',
+        ],
+        techTitle: 'Detalle técnico',
+        retry: 'Reintentar',
+      }
+    : {
+        title: 'Kairo Lunar could not start',
+        reason: 'This device or browser cannot create a WebGL context, which is required for the application to work.',
+        more: 'See more details',
+        less: 'Hide details',
+        tipsTitle: 'What you can do',
+        tips: [
+          'Try a more powerful computer, ideally with a dedicated graphics card.',
+          'Use an up-to-date browser (Chrome, Edge or Firefox).',
+          'Enable hardware acceleration in your browser settings.',
+          'Update your graphics drivers.',
+          'If you are on a virtual machine or remote desktop, try a physical PC.',
+        ],
+        techTitle: 'Technical detail',
+        retry: 'Retry',
+      };
+
+  const tech = err instanceof Error ? err.message : err ? String(err) : '';
+
+  const style = document.createElement('style');
+  style.textContent = `
+    .nw{position:fixed;inset:0;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;padding:24px;overflow:auto;z-index:9999;font-family:"Space Grotesk",system-ui,sans-serif;}
+    .nw-in{width:100%;max-width:520px;text-align:center;}
+    .nw-ring{width:44px;height:44px;border:1px solid #444;border-radius:50%;margin:0 auto 26px;position:relative;}
+    .nw-ring::after{content:"";position:absolute;inset:13px;border-radius:50%;background:#fff;opacity:.85;}
+    .nw h1{font:17px "Michroma",sans-serif;letter-spacing:.08em;line-height:1.5;margin:0 0 14px;font-weight:400;}
+    .nw p{margin:0;font-size:14px;line-height:1.6;color:#bdbdbd;}
+    .nw-btns{display:flex;gap:10px;justify-content:center;margin-top:28px;flex-wrap:wrap;}
+    .nw button{font:9px "Michroma",sans-serif;letter-spacing:.1em;color:#fff;background:rgba(0,0,0,.8);border:1px solid #fff;padding:10px 16px;cursor:pointer;}
+    .nw button:hover{background:#fff;color:#000;}
+    .nw button.sec{border-color:#444;color:#ccc;}
+    .nw button.sec:hover{border-color:#fff;background:#fff;color:#000;}
+    .nw-more{display:none;text-align:left;margin-top:26px;border-top:1px solid #222;padding-top:20px;}
+    .nw-more.open{display:block;}
+    .nw-more h2{font:9px "Michroma",sans-serif;letter-spacing:.12em;color:#9a9a9a;margin:0 0 10px;font-weight:400;text-transform:uppercase;}
+    .nw-more ul{margin:0 0 22px;padding-left:18px;font-size:13px;line-height:1.7;color:#d0d0d0;}
+    .nw-more pre{margin:0;padding:12px;border:1px solid #222;background:#0a0a0a;color:#9a9a9a;font:11px/1.5 ui-monospace,Consolas,monospace;white-space:pre-wrap;word-break:break-word;max-height:140px;overflow:auto;}
+  `;
+
+  const box = document.createElement('div');
+  box.className = 'nw';
+  box.setAttribute('data-no-webgl', '');
+  box.innerHTML = `
+    <div class="nw-in">
+      <div class="nw-ring"></div>
+      <h1></h1>
+      <p class="nw-reason"></p>
+      <div class="nw-btns">
+        <button class="nw-toggle" type="button"></button>
+        <button class="sec nw-retry" type="button"></button>
+      </div>
+      <div class="nw-more">
+        <h2 class="nw-tips-t"></h2>
+        <ul></ul>
+        <h2 class="nw-tech-t"></h2>
+        <pre></pre>
+      </div>
+    </div>`;
+  const $ = <E extends HTMLElement>(sel: string): E => box.querySelector<E>(sel)!;
+  $('h1').textContent = T.title;
+  $('.nw-reason').textContent = T.reason;
+  $('.nw-tips-t').textContent = T.tipsTitle;
+  $('.nw-tech-t').textContent = T.techTitle;
+  $('pre').textContent = tech || (es ? 'WebGL no disponible.' : 'WebGL not available.');
+  T.tips.forEach((t) => {
+    const li = document.createElement('li');
+    li.textContent = t;
+    $('ul').appendChild(li);
+  });
+  const more = $('.nw-more');
+  const toggle = $<HTMLButtonElement>('.nw-toggle');
+  toggle.textContent = T.more;
+  toggle.addEventListener('click', () => {
+    const open = more.classList.toggle('open');
+    toggle.textContent = open ? T.less : T.more;
+  });
+  const retry = $<HTMLButtonElement>('.nw-retry');
+  retry.textContent = T.retry;
+  retry.addEventListener('click', () => window.location.reload());
+
+  box.prepend(style);
+  container.appendChild(box);
+}
+
 export interface MainPageResult {
   dispose: () => void;
 }
 
 export function createMainPage(container: HTMLElement): MainPageResult {
   setBrowserTab();
+  if (!hasWebGL()) {
+    showNoWebGL(container);
+    return { dispose: () => { container.innerHTML = ''; } };
+  }
   let lang: Lang = 'es';
 
   const root = document.createElement('div');
@@ -113,13 +235,23 @@ export function createMainPage(container: HTMLElement): MainPageResult {
 
     const q = <T extends HTMLElement>(s: string): T => root.querySelector<T>(s)!;
     const closer = q<HTMLButtonElement>('[data-closer]');
-    moon = createMoonScene(q('.mp-stage'), {
-      onPin: ({ visible, x, y }) => {
-        closer.style.opacity = visible && !leaving ? '1' : '0';
-        closer.style.pointerEvents = visible ? 'auto' : 'none';
-        closer.style.transform = `translate(${Math.round(x - 14)}px, ${Math.round(y - 14)}px)`;
-      },
-    });
+    try {
+      moon = createMoonScene(q('.mp-stage'), {
+        onPin: ({ visible, x, y }) => {
+          closer.style.opacity = visible && !leaving ? '1' : '0';
+          closer.style.pointerEvents = visible ? 'auto' : 'none';
+          closer.style.transform = `translate(${Math.round(x - 14)}px, ${Math.round(y - 14)}px)`;
+        },
+      });
+    } catch (err) {
+      // WebGL no disponible: se limpia todo y se muestra solo el aviso
+      console.error(err);
+      moon = null;
+      root.remove();
+      fade.remove();
+      showNoWebGL(container, err);
+      return;
+    }
 
     root.querySelectorAll<HTMLElement>('[data-lang]').forEach((b) =>
       b.addEventListener('click', () => { lang = b.dataset.lang as Lang; render(); }));
@@ -144,7 +276,16 @@ export function createMainPage(container: HTMLElement): MainPageResult {
     const wrap = document.createElement('div');
     wrap.className = 'mp-terrain';
     container.appendChild(wrap);
-    const viz = createVisualizer(wrap, { landing: { x: 10, z: -15 } });
+    let viz: VisualizerResult;
+    try {
+      viz = createVisualizer(wrap, { landing: { x: 10, z: -15 } });
+    } catch (err) {
+      console.error(err);
+      wrap.remove();
+      fade.remove();
+      showNoWebGL(container, err);
+      return;
+    }
 
     const back = document.createElement('button');
     back.className = 'mp-back';
