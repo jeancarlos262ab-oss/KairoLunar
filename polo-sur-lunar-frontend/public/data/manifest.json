@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "generated_at": "2026-11-15T03:17:16+00:00",
+  "moon_radius_m": 1737400.0,
+  "dem_source": "LDEM_80S_80MPP_ADJ.tiff",
+  "sites": [
+    {
+      "id": "im2",
+      "name": "IM-2 Athena (Mons Mouton)",
+      "lat": -84.79,
+      "lon": 29.2,
+      "terrain": {
+        "file": "terrain/im2.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": 5320.7956695084085,
+        "min_m": -825.673095703125,
+        "max_m": 621.0814819335938,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/im2.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": -1.4692388695374476,
+        "max_deg": 4.045869630847707,
+        "mean_deg": 1.1618326980728024
+      }
+    },
+    {
+      "id": "shackleton",
+      "name": "Shackleton (borde)",
+      "lat": -89.9,
+      "lon": 129.78,
+      "terrain": {
+        "file": "terrain/shackleton.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": -337.9839796904712,
+        "min_m": -2548.888671875,
+        "max_m": 2061.48876953125,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/shackleton.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": 4.377065406356749,
+        "max_deg": 32.84701195891976,
+        "mean_deg": 16.00572800858636
+      }
+    },
+    {
+      "id": "south-pole",
+      "name": "Polo sur geográfico",
+      "lat": -90,
+      "lon": 0,
+      "terrain": {
+        "file": "terrain/south-pole.bin",
+        "size": 257,
+        "extent_m": 20000.0,
+        "step_m": 78.125,
+        "site_height_m": 1290.7660827636719,
+        "min_m": -4193.71044921875,
+        "max_m": 431.42181396484375,
+        "dtype": "float32-le",
+        "layout": "fila mayor, fila 0 = norte, columna 0 = oeste"
+      },
+      "horizon": {
+        "file": "horizon/south-pole.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 150.0,
+        "min_deg": -1.9664739936517341,
+        "max_deg": 10.241409945382065,
+        "mean_deg": 3.2130439647362543
+      }
+    },
+    {
+      "id": "im1",
+      "name": "IM-1 Odysseus (Malapert A)",
+      "lat": -80.13,
+      "lon": 1.44,
+      "horizon": {
+        "file": "horizon/im1.json",
+        "observer_height_m": 2.0,
+        "max_radius_m": 150000.0,
+        "azimuth_step_deg": 1.0,
+        "min_reach_km": 3.92,
+        "min_deg": -0.9902279294372126,
+        "max_deg": 11.052720030313306,
+        "mean_deg": 4.736750948313828
+      }
+    }
+  ]
+}
