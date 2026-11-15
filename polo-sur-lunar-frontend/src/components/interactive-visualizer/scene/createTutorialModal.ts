@@ -20,12 +20,12 @@ export interface TutorialModalResult {
 const STORAGE_KEY = 'lunar-visualizer:tutorial-dismissed';
 
 const DEFAULT_STEPS: TutorialStep[] = [
-  {
+    {
     title: 'Elige una misión',
     paragraphs: [
-      'Arriba a la izquierda abre «Sitio de aterrizaje» y escoge una misión, como IM-2 o Apolo 11. La escena viaja a ese lugar y el módulo vuelve a aterrizar.',
+      'Arriba a la izquierda abre «Sitio de aterrizaje» y escoge una misión, como IM-2 o Shackleton. La escena viaja a ese lugar y el módulo vuelve a aterrizar.',
       'También puedes abrir «Coordenadas personalizadas» y escribir cualquier latitud y longitud.',
-      'Los sitios cercanos al polo sur usan relieve real medido por la NASA (LOLA); los demás muestran un terreno de ejemplo.',
+      'Los sitios de la lista usan datos reales de la NASA (LOLA). Si pones coordenadas fuera de la zona al sur de 80°S, el terreno será de ejemplo.',
     ],
   },
   {
