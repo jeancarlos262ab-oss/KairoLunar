@@ -1,16 +1,15 @@
 [
-  { "id": "shackleton", "name": "Shackleton (borde)", "lat": -89.76, "lon": 203.58 },
+  { "id": "shackleton", "name": "Shackleton (borde)", "lat": -89.76, "lon": -156.42 },
   { "id": "south-pole", "name": "Polo sur geográfico", "lat": -90, "lon": 0 },
   { "id": "im2", "name": "IM-2 Athena (Mons Mouton)", "lat": -84.79, "lon": 29.2 },
   { "id": "im1", "name": "IM-1 Odysseus (Malapert A)", "lat": -80.13, "lon": 1.44 },
-  { "id": "im1", "name": "IM-1 Odysseus (Malapert A)", "lat": -80.13, "lon": 1.44 },
-  {"id": "nobile-rim-2", "name": "Artemis III - Nobile Rim 2", "lat": -83.9657, "lon": 57.9499},
-  {"id": "mons-mouton", "name": "Artemis III - Mons Mouton", "lat": -85.4006, "lon": 30.8514},
-  {"id": "malapert-massif", "name": "Artemis III - Malapert Massif", "lat": -85.9106, "lon": -1.1413},
-  {"id": "de-gerlache-rim-2", "name": "Artemis III - de Gerlache Rim 2", "lat": -88.1165, "lon": -63.8714},
-  {"id": "mons-mouton-plateau", "name": "Artemis III - Mons Mouton Plateau", "lat": -84.1584, "lon": 27.0871},
-  {"id": "slater-plain", "name": "Artemis III - Slater Plain", "lat": -87.2402, "lon": 125.1631},
-  {"id": "peak-near-cabeus-b", "name": "Artemis III - Peak Near Cabeus B", "lat": -83.5451, "lon": -68.4333},
-  {"id": "nobile-rim-1", "name": "Artemis III - Nobile Rim 1", "lat": -85.4099, "lon": 36.2057},
-  {"id": "haworth", "name": "Artemis III - Haworth", "lat": -86.6038, "lon": -23.5277}
+  { "id": "nobile-rim-2", "name": "Nobile Rim 2", "lat": -83.9541, "lon": 58.8215 },
+  { "id": "mons-mouton", "name": "Mons Mouton", "lat": -85.4266, "lon": 31.7428 },
+  { "id": "malapert-massif", "name": "Malapert Massif", "lat": -85.9948, "lon": -0.2358 },
+  { "id": "de-gerlache-rim-2", "name": "de Gerlache Rim 2", "lat": -88.23, "lon": -64.6284 },
+  { "id": "mons-mouton-plateau", "name": "Mons Mouton Plateau", "lat": -84.3347, "lon": 30.5923 },
+  { "id": "slater-plain", "name": "Slater Plain", "lat": -87.1637, "lon": 125.5377 },
+  { "id": "peak-near-cabeus-b", "name": "Peak Near Cabeus B", "lat": -83.6375, "lon": -68.7495 },
+  { "id": "nobile-rim-1", "name": "Nobile Rim 1", "lat": -85.4364, "lon": 37.347 },
+  { "id": "haworth", "name": "Haworth", "lat": -86.7639, "lon": -22.777 }
 ]

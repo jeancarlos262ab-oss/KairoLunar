@@ -6,11 +6,13 @@ import {
 } from './lunarEphemeris';
 import { makeHorizonFn, type HorizonProfile } from './data/loadLunarData';
 import { element, PANEL_STYLE } from './ui';
+import type { SiteCategory } from './sites';
 
 export interface SkySite {
   name: string;
   lat: number;
   lon: number;
+  category?: SiteCategory;
 }
 
 export interface SkyPanelOptions {
@@ -62,10 +64,11 @@ export function formatRemaining(ms: number): string {
   return `${minutes} min`;
 }
 
-function describeHorizon(profile: HorizonProfile | null): string {
+function describeHorizon(profile: HorizonProfile | null, site: SkySite): string {
   if (!profile) return 'Horizonte esférico (sin datos LOLA para este sitio)';
   const radiusKm = Math.round(profile.maxRadiusM / 1000);
-  const base = `Horizonte LOLA · radio ${radiusKm} km`;
+  const source = site.category === 'artemis' ? 'Artemis III (centro de la región)' : 'LOLA';
+  const base = `Horizonte ${source} · radio ${radiusKm} km`;
   if (profile.minReachKm < radiusKm * 0.5) {
     return `${base} · ⚠ cobertura parcial (≥ ${profile.minReachKm.toFixed(1)} km)`;
   }
@@ -362,7 +365,7 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     drawChart(date, site, sun, earth, profile, horizon);
     fillRow(sunBuilt.row, 'sun', date, site, sun, profile, horizon);
     fillRow(earthBuilt.row, 'earth', date, site, earth, profile, horizon);
-    note.textContent = describeHorizon(profile);
+    note.textContent = describeHorizon(profile, site);
   };
 
   return { element: panel, update, dispose: () => panel.remove() };
