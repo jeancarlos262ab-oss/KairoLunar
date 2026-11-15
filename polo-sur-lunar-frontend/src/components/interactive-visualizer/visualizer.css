@@ -31,7 +31,7 @@
 .kv .kv-range::-webkit-slider-thumb { appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 0; }
 .kv .kv-range::-moz-range-thumb { width: 12px; height: 12px; border-radius: 50%; background: #fff; border: 0; }
 
-.kv .kv-mission { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10; max-width: 30%; padding: 9px 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; border: 1px solid #fff; background: #fff; color: #000; font: 9px 'Michroma', sans-serif; letter-spacing: .1em; }
+.kv .kv-mission { position: absolute; top: 14px; left: 50%; transform: translateX(-50%); z-index: 10; max-width: 30%; padding: 11px 18px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; border: 1px solid #fff; background: #000; color: #fff; font: 11px 'Michroma', sans-serif; letter-spacing: .1em; }
 
 .kv .kv-help { position: absolute; left: 14px; bottom: 14px; z-index: 10; }
 
