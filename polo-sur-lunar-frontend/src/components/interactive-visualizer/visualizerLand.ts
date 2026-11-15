@@ -7,6 +7,7 @@ import { createLunarModule } from './scene/createLunarModule';
 import { createTimeControls } from './scene/createTimeControls';
 import { createSiteSelector } from './createSiteSelector';
 import { createSkyPanel } from './createSkyPanel';
+import { createTutorialModal } from './scene/createTutorialModal';
 import { loadSiteData, makeHorizonFn, type HorizonProfile } from './data/loadLunarData';
 import { SITES, type LandingSite } from './sites';
 import {
@@ -244,6 +245,8 @@ export function createVisualizer(
     getHorizon: () => currentHorizon,
   });
 
+  const tutorial = createTutorialModal(container);
+
   applyDate(startDate);
   void applySiteData(currentSite, false);
 
@@ -275,6 +278,7 @@ export function createVisualizer(
     observer.disconnect();
     button.removeEventListener('click', onToggle);
     button.remove();
+    tutorial.dispose();
     skyPanel.dispose();
     selector.dispose();
     timeControls.dispose();
