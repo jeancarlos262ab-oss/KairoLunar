@@ -1,10 +1,4 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
 import './index.css';
-import Visualizer3D from './visualizerLand.jsx';
+import { createMainPage } from './components/interactive-visualizer/mainpage/mainpage';
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <Visualizer3D />
-  </StrictMode>,
-);
+createMainPage(document.getElementById('root'));
