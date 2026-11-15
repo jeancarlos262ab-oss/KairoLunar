@@ -234,6 +234,8 @@ export function getSynodicMonthDays(): number {
   return SYNODIC_MONTH_DAYS;
 }
 
+export type HorizonFn = (azimuthDeg: number) => number;
+
 export function findNextBodyEvent(
   from: Date,
   body: Body,
@@ -241,24 +243,28 @@ export function findNextBodyEvent(
   latitude: number,
   longitude: number,
   maxDays = 32,
+  horizon?: HorizonFn,
 ): Date | null {
   const stepMs = 30 * 60 * 1000;
   const limit = from.getTime() + maxDays * MS_PER_DAY;
-  const elevationAt = (ms: number): number => getBodyElevation(new Date(ms), body, latitude, longitude);
+  const marginAt = (ms: number): number => {
+    const h = getBodyHorizontal(new Date(ms), body, latitude, longitude);
+    return h.elevation - (horizon ? horizon(h.azimuth) : 0);
+  };
 
   let previousMs = from.getTime();
-  let previous = elevationAt(previousMs);
+  let previous = marginAt(previousMs);
 
   for (let ms = previousMs + stepMs; ms <= limit; ms += stepMs) {
-    const current = elevationAt(ms);
+    const current = marginAt(ms);
     const crossed = kind === 'rise' ? previous < 0 && current >= 0 : previous >= 0 && current < 0;
     if (crossed) {
       let lo = previousMs;
       let hi = ms;
       for (let i = 0; i < 24; i++) {
         const mid = (lo + hi) / 2;
-        const e = elevationAt(mid);
-        const below = kind === 'rise' ? e < 0 : e >= 0;
+        const m = marginAt(mid);
+        const below = kind === 'rise' ? m < 0 : m >= 0;
         if (below) lo = mid;
         else hi = mid;
       }
@@ -276,8 +282,15 @@ export function findNextSunEvent(
   latitude: number,
   longitude: number,
   maxDays = 32,
+  horizon?: HorizonFn,
 ): Date | null {
-  return findNextBodyEvent(from, 'sun', kind === 'sunrise' ? 'rise' : 'set', latitude, longitude, maxDays);
+  return findNextBodyEvent(
+    from,
+    'sun',
+    kind === 'sunrise' ? 'rise' : 'set',
+    latitude,
+    longitude,
+    maxDays,
+    horizon,
+  );
 }
-
-export { normalize180 };

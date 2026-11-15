@@ -7,7 +7,7 @@ export interface EarthOptions {
 
 export interface EarthResult {
   earth: THREE.Mesh;
-  setHorizontal: (azimuthDeg: number, elevationDeg: number) => void;
+  setHorizontal: (azimuthDeg: number, elevationDeg: number, horizonDeg?: number) => void;
   setSunDirection: (azimuthDeg: number, elevationDeg: number) => void;
   setDate: (date: Date) => void;
   dispose: () => void;
@@ -177,9 +177,9 @@ export function createEarth(scene: THREE.Scene, options: EarthOptions = {}): Ear
   earth.name = 'earth';
   scene.add(earth);
 
-  const setHorizontal = (azimuthDeg: number, elevationDeg: number): void => {
+  const setHorizontal = (azimuthDeg: number, elevationDeg: number, horizonDeg = 0): void => {
     earth.position.copy(directionFromHorizontal(azimuthDeg, elevationDeg)).multiplyScalar(distance);
-    earth.visible = elevationDeg > -angularRadiusDeg;
+    earth.visible = elevationDeg > horizonDeg - angularRadiusDeg;
   };
 
   const setSunDirection = (azimuthDeg: number, elevationDeg: number): void => {

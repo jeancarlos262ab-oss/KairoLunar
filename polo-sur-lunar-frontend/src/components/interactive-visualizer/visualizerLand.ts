@@ -7,7 +7,7 @@ import { createLunarModule } from './scene/createLunarModule';
 import { createTimeControls } from './scene/createTimeControls';
 import { createSiteSelector } from './createSiteSelector';
 import { createSkyPanel } from './createSkyPanel';
-import { loadSiteData } from './data/loadLunarData';
+import { loadSiteData, makeHorizonFn, type HorizonProfile } from './data/loadLunarData';
 import { SITES, type LandingSite } from './sites';
 import {
   findNextSunEvent,
@@ -120,6 +120,7 @@ export function createVisualizer(
   const startDate = options.startDate ?? new Date();
   let currentSite: LandingSite =
     SITES.find((site) => site.id === (options.siteId ?? DEFAULTS.siteId)) ?? SITES[0];
+  let currentHorizon: HorizonProfile | null = null;
 
   const previousPosition = container.style.position;
   const previousBackground = container.style.background;
@@ -172,11 +173,31 @@ export function createVisualizer(
   let terrainToken = 0;
   let disposed = false;
 
-  const applySiteTerrain = async (site: LandingSite, regenerateIfMissing: boolean): Promise<void> => {
+  const applyDate = (date: Date): void => {
+    const horizon = makeHorizonFn(currentHorizon);
+    const h = getSunHorizontal(date, currentSite.lat, currentSite.lon);
+    const sunHorizon = horizon(h.azimuth);
+    sun.setHorizontal(h.azimuth, h.elevation, sunHorizon);
+    const e = getEarthHorizontal(date, currentSite.lat, currentSite.lon);
+    earth.setHorizontal(e.azimuth, e.elevation, horizon(e.azimuth));
+    earth.setSunDirection(h.azimuth, h.elevation);
+    earth.setDate(date);
+    const state = h.elevation > sunHorizon ? 'Sol sobre el horizonte' : 'Sol bajo el horizonte';
+    const horizonText = currentHorizon ? `  ·  Horizonte ${sunHorizon.toFixed(1)}°` : '';
+    timeControls.setInfo(
+      `${currentSite.name}  ·  ${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°${horizonText}  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
+    );
+    skyPanel.update(date);
+  };
+
+  const applySiteData = async (site: LandingSite, regenerateIfMissing: boolean): Promise<void> => {
     terrainToken += 1;
     const token = terrainToken;
     const data = await loadSiteData(site.id);
     if (disposed || token !== terrainToken) return;
+
+    currentHorizon = data.horizon;
+    applyDate(timeControls.getDate());
 
     if (data.terrain) {
       land.setTerrain(data.terrain, exaggeration);
@@ -192,24 +213,18 @@ export function createVisualizer(
     button.paint(true);
   };
 
-  const applyDate = (date: Date): void => {
-    const h = getSunHorizontal(date, currentSite.lat, currentSite.lon);
-    sun.setHorizontal(h.azimuth, h.elevation);
-    const e = getEarthHorizontal(date, currentSite.lat, currentSite.lon);
-    earth.setHorizontal(e.azimuth, e.elevation);
-    earth.setSunDirection(h.azimuth, h.elevation);
-    earth.setDate(date);
-    const state = h.elevation > 0 ? 'Sol sobre el horizonte' : 'Sol bajo el horizonte';
-    timeControls.setInfo(
-      `${currentSite.name}  ·  ${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
-    );
-    skyPanel.update(date);
-  };
-
   const timeControls = createTimeControls(container, {
     initialDate: startDate,
     onChange: applyDate,
-    findEvent: (kind, from) => findNextSunEvent(from, kind, currentSite.lat, currentSite.lon),
+    findEvent: (kind, from) =>
+      findNextSunEvent(
+        from,
+        kind,
+        currentSite.lat,
+        currentSite.lon,
+        32,
+        makeHorizonFn(currentHorizon),
+      ),
   });
 
   const selector = createSiteSelector(container, {
@@ -217,18 +232,20 @@ export function createVisualizer(
     initialSiteId: currentSite.id,
     onSelect: (site) => {
       currentSite = site;
+      currentHorizon = null;
       button.setLabel(site.name);
-      void applySiteTerrain(site, true);
+      void applySiteData(site, true);
       applyDate(timeControls.getDate());
     },
   });
 
   const skyPanel = createSkyPanel(container, {
     getSite: () => currentSite,
+    getHorizon: () => currentHorizon,
   });
 
   applyDate(startDate);
-  void applySiteTerrain(currentSite, false);
+  void applySiteData(currentSite, false);
 
   const resize = (): void => {
     const w = Math.max(container.clientWidth, 1);

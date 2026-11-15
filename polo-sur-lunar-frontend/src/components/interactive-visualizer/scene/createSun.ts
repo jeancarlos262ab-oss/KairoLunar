@@ -19,7 +19,7 @@ export interface SunResult {
   pivot: THREE.Group;
   update: (deltaSeconds: number) => void;
   setAngle: (radians: number) => void;
-  setHorizontal: (azimuthDeg: number, elevationDeg: number) => void;
+  setHorizontal: (azimuthDeg: number, elevationDeg: number, horizonDeg?: number) => void;
   setOrbitMode: () => void;
   getElevation: () => number;
   setPaused: (paused: boolean) => void;
@@ -102,7 +102,7 @@ export function createSun(scene: THREE.Scene, options: SunOptions = {}): SunResu
     spin.rotation.y = radians;
   };
 
-  const setHorizontal = (azimuthDeg: number, elevationDeg: number): void => {
+  const setHorizontal = (azimuthDeg: number, elevationDeg: number, horizonDeg = 0): void => {
     manual = true;
     pivot.rotation.set(0, 0, 0);
     spin.rotation.set(0, 0, 0);
@@ -113,8 +113,8 @@ export function createSun(scene: THREE.Scene, options: SunOptions = {}): SunResu
       orbitRadius * Math.sin(el),
       -orbitRadius * Math.cos(el) * Math.cos(az),
     );
-    sun.visible = elevationDeg > -1;
-    light.intensity = elevationDeg > 0 ? lightIntensity : 0;
+    sun.visible = elevationDeg > horizonDeg - 1;
+    light.intensity = elevationDeg > horizonDeg ? lightIntensity : 0;
   };
 
   const setOrbitMode = (): void => {

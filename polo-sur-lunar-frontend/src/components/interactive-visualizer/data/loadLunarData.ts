@@ -1,3 +1,5 @@
+import type { HorizonFn } from '../lunarEphemeris';
+
 export interface TerrainPatch {
   size: number;
   extentM: number;
@@ -169,4 +171,9 @@ export function loadSiteData(siteId: string): Promise<SiteData> {
     siteCache.set(siteId, cached);
   }
   return cached;
+}
+
+export function makeHorizonFn(profile: HorizonProfile | null): HorizonFn {
+  if (!profile) return () => 0;
+  return (azimuthDeg: number) => horizonElevationAt(profile, azimuthDeg) ?? 0;
 }
