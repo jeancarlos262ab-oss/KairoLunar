@@ -1,8 +1,7 @@
 import './mainpage.css';
 import { createMoonScene, type MoonScene } from './moonScene';
 import { createVisualizer, type VisualizerResult } from '../visualizerLand';
-
-type Lang = 'es' | 'en';
+import { getLang, setLang, type Lang } from '../i18n';
 
 const T = {
   es: {
@@ -52,7 +51,7 @@ const FAVICON_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"
 
 function setBrowserTab(): void {
   document.title = 'Kairo Lunar';
-  document.documentElement.lang = 'es';
+  document.documentElement.lang = getLang();
   document.querySelectorAll('link[rel~="icon"]').forEach((l) => l.remove());
   const link = document.createElement('link');
   link.rel = 'icon';
@@ -77,7 +76,7 @@ function hasWebGL(): boolean {
 // Pantalla negra de aviso cuando no hay WebGL (motivo corto + botón "ver más detalles")
 function showNoWebGL(container: HTMLElement, err?: unknown): void {
   if (container.querySelector('[data-no-webgl]')) return;
-  const es = !navigator.language.toLowerCase().startsWith('en');
+  const es = getLang() === 'es';
   const T = es
     ? {
         title: 'Kairo Lunar no pudo iniciar',
@@ -189,7 +188,7 @@ export function createMainPage(container: HTMLElement): MainPageResult {
     showNoWebGL(container);
     return { dispose: () => { container.innerHTML = ''; } };
   }
-  let lang: Lang = 'es';
+  let lang: Lang = getLang();
 
   const root = document.createElement('div');
   root.className = 'mp';
@@ -254,7 +253,7 @@ export function createMainPage(container: HTMLElement): MainPageResult {
     }
 
     root.querySelectorAll<HTMLElement>('[data-lang]').forEach((b) =>
-      b.addEventListener('click', () => { lang = b.dataset.lang as Lang; render(); }));
+      b.addEventListener('click', () => { lang = b.dataset.lang as Lang; setLang(lang); render(); }));
     closer.addEventListener('click', () => void openTerrain());
     root.querySelectorAll<HTMLElement>('[data-act]').forEach((b) =>
       b.addEventListener('click', () => moon?.zoom(b.dataset.act === 'zin' ? 0.85 : 1.18)));

@@ -1,3 +1,4 @@
+import { onLangChange, tr } from '../i18n';
 import { element, makeButton } from '../ui';
 
 export interface TutorialStep {
@@ -23,23 +24,23 @@ const DEFAULT_STEPS: TutorialStep[] = [
   {
     title: 'Elige una misión',
     paragraphs: [
-      'Arriba a la izquierda abre «Sitio de aterrizaje» y escoge una misión, como IM-2 o Shackleton. La escena viaja a ese lugar y el módulo vuelve a aterrizar.',
-      'También puedes abrir «Coordenadas personalizadas» y escribir cualquier latitud y longitud.',
+      'Arriba a la izquierda abre "Sitio de aterrizaje" y escoge una misión, como IM-2 o Shackleton. La escena viaja a ese lugar y el módulo vuelve a aterrizar.',
+      'También puedes abrir "Coordenadas personalizadas" y escribir cualquier latitud y longitud.',
       'Los sitios de la lista usan datos reales de la NASA (LOLA). Si pones coordenadas fuera de la zona al sur de 80°S, el terreno será de ejemplo.',
     ],
   },
   {
     title: 'Horas de sol y amanecer',
     paragraphs: [
-      'En la barra de abajo elige la fecha y la hora (UTC), o pulsa «Reproducir» para ver pasar los días.',
-      'Los botones «Amanecer» y «Atardecer» saltan al próximo evento del Sol en ese sitio.',
-      'El panel «Sol» indica si hay luz para generar energía y cuánto falta para el siguiente amanecer o puesta. El panel «Tierra» indica si hay línea de vista para comunicarse.',
+      'En la barra de abajo elige la fecha y la hora (UTC), o pulsa "Reproducir" para ver pasar los días.',
+      'Los botones "Amanecer" y "Atardecer" saltan al próximo evento del Sol en ese sitio.',
+      'El panel "Sol" indica si hay luz para generar energía y cuánto falta para el siguiente amanecer o puesta. El panel "Tierra" indica si hay línea de vista para comunicarse.',
     ],
   },
   {
     title: 'Qué muestran las coordenadas polares',
     paragraphs: [
-      'El círculo del panel «Cielo» es el cielo visto desde arriba: el centro queda justo sobre tu cabeza y el borde es el horizonte.',
+      'El círculo del panel "Cielo" es el cielo visto desde arriba: el centro queda justo sobre tu cabeza y el borde es el horizonte.',
       'La dirección alrededor del círculo es el azimut (norte arriba, este a la derecha) y la distancia al centro indica qué tan alto está el astro: la elevación.',
       'El punto amarillo es el Sol y el azul es la Tierra. La zona gris es el relieve que tapa el cielo: si un astro cae ahí, no se ve desde el sitio.',
     ],
@@ -79,8 +80,7 @@ export function createTutorialModal(
   let isOpen = false;
   let previousFocus: HTMLElement | null = null;
 
-  const helpButton = makeButton('?', 'Abrir el instructivo', 'kv-sq kv-help');
-  helpButton.title = 'Cómo usar el visualizador';
+  const helpButton = makeButton('?', '', 'kv-sq kv-help');
 
   const overlay = element('div', 'kv-modal');
 
@@ -91,7 +91,7 @@ export function createTutorialModal(
   dialog.setAttribute('aria-describedby', bodyId);
 
   const stepLabel = element('div', 'kv-step');
-  const closeButton = makeButton('✕', 'Cerrar el instructivo', 'kv-sq');
+  const closeButton = makeButton('✕', '', 'kv-sq');
   const topRow = element('div', 'kv-dialog-top');
   topRow.append(stepLabel, closeButton);
 
@@ -113,10 +113,11 @@ export function createTutorialModal(
   const rememberLabel = element('label', 'kv-check');
   const remember = document.createElement('input');
   remember.type = 'checkbox';
-  rememberLabel.append(remember, document.createTextNode('No volver a mostrar al iniciar'));
+  const rememberText = document.createTextNode('');
+  rememberLabel.append(remember, rememberText);
 
-  const back = makeButton('Atrás', 'Paso anterior');
-  const next = makeButton('Siguiente', 'Paso siguiente', 'kv-btn strong');
+  const back = makeButton('', '');
+  const next = makeButton('', '', 'kv-btn strong');
   const nav = element('div', 'kv-nav');
   nav.append(back, next);
 
@@ -130,13 +131,19 @@ export function createTutorialModal(
   const render = (): void => {
     const step = steps[index];
     const isLast = index === steps.length - 1;
-    stepLabel.textContent = `Paso ${index + 1} de ${steps.length}`;
-    title.textContent = step.title;
-    body.replaceChildren(...step.paragraphs.map((text) => element('p', '', text)));
+    helpButton.setAttribute('aria-label', tr('Abrir el instructivo'));
+    helpButton.title = tr('Cómo usar el visualizador');
+    closeButton.setAttribute('aria-label', tr('Cerrar el instructivo'));
+    rememberText.textContent = tr('No volver a mostrar al iniciar');
+    back.textContent = tr('Atrás');
+    back.setAttribute('aria-label', tr('Paso anterior'));
+    stepLabel.textContent = `${tr('Paso')} ${index + 1} ${tr('de')} ${steps.length}`;
+    title.textContent = tr(step.title);
+    body.replaceChildren(...step.paragraphs.map((text) => element('p', '', tr(text))));
     dots.forEach((dot, i) => dot.classList.toggle('on', i === index));
     back.style.visibility = index === 0 ? 'hidden' : 'visible';
-    next.textContent = isLast ? 'Empezar' : 'Siguiente';
-    next.setAttribute('aria-label', isLast ? 'Cerrar el instructivo y empezar' : 'Paso siguiente');
+    next.textContent = tr(isLast ? 'Empezar' : 'Siguiente');
+    next.setAttribute('aria-label', tr(isLast ? 'Cerrar el instructivo y empezar' : 'Paso siguiente'));
   };
 
   const focusableItems = (): HTMLElement[] => {
@@ -217,9 +224,13 @@ export function createTutorialModal(
   helpButton.addEventListener('click', open);
   overlay.addEventListener('click', onOverlayClick);
 
+  render();
+  const offLang = onLangChange(render);
+
   if (options.openOnStart !== false && !readDismissed(storageKey)) open();
 
   const dispose = (): void => {
+    offLang();
     document.removeEventListener('keydown', onKeyDown);
     next.removeEventListener('click', onNext);
     back.removeEventListener('click', onBack);

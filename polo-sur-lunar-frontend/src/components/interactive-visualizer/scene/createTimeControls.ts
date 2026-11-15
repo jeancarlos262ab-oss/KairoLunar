@@ -1,3 +1,4 @@
+import { onLangChange, tr } from '../i18n';
 import { element, makeButton } from '../ui';
 
 export type TimeEventKind = 'sunrise' | 'sunset';
@@ -44,7 +45,6 @@ export function createTimeControls(
 
   const panel = element('div', 'kv-panel kv-time');
   panel.setAttribute('role', 'group');
-  panel.setAttribute('aria-label', 'Control de fecha y hora (UTC)');
 
   const info = element('div', 'kv-info');
 
@@ -56,10 +56,10 @@ export function createTimeControls(
   const dateLabel = element('label', 'kv-row');
   const dateInput = element('input', 'kv-field');
   dateInput.type = 'datetime-local';
-  dateInput.setAttribute('aria-label', 'Fecha y hora en UTC');
-  dateLabel.append(element('span', 'kv-muted', 'Fecha y hora (UTC)'), dateInput);
+  const dateCaption = element('span', 'kv-muted');
+  dateLabel.append(dateCaption, dateInput);
 
-  const nowButton = makeButton('Ahora', 'Ir a la fecha y hora actuales');
+  const nowButton = makeButton('', '');
   rowInput.append(dateLabel, nowButton);
 
   const slider = element('input', 'kv-range');
@@ -68,22 +68,21 @@ export function createTimeControls(
   slider.max = String(SLIDER_RANGE_HOURS);
   slider.step = '1';
   slider.value = '0';
-  slider.setAttribute('aria-label', 'Desplazamiento en horas respecto a la fecha base');
 
   const rowButtons = element('div', 'kv-row');
 
-  const backDay = makeButton('−1 día', 'Retroceder un día');
-  const playButton = makeButton('▶ Reproducir', 'Reproducir o pausar la animación');
-  const forwardDay = makeButton('+1 día', 'Avanzar un día');
-  const sunriseButton = makeButton('☀↑ Amanecer', 'Ir al siguiente amanecer');
-  const sunsetButton = makeButton('☀↓ Atardecer', 'Ir al siguiente atardecer');
+  const backDay = makeButton('', '');
+  const playButton = makeButton('', '');
+  const forwardDay = makeButton('', '');
+  const sunriseButton = makeButton('', '');
+  const sunsetButton = makeButton('', '');
 
   const speedSelect = element('select', 'kv-field');
-  speedSelect.setAttribute('aria-label', 'Velocidad de la animación');
   SPEEDS.forEach((speed, index) => {
     const option = document.createElement('option');
     option.value = String(speed.seconds);
     option.textContent = speed.label;
+    option.dataset.label = speed.label;
     option.selected = index === DEFAULT_SPEED_INDEX;
     speedSelect.appendChild(option);
   });
@@ -91,6 +90,30 @@ export function createTimeControls(
   rowButtons.append(backDay, playButton, forwardDay, speedSelect, sunriseButton, sunsetButton);
   panel.append(info, notice, rowInput, slider, rowButtons);
   container.appendChild(panel);
+
+  const applyLang = (): void => {
+    panel.setAttribute('aria-label', tr('Control de fecha y hora (UTC)'));
+    dateInput.setAttribute('aria-label', tr('Fecha y hora en UTC'));
+    dateCaption.textContent = tr('Fecha y hora (UTC)');
+    nowButton.textContent = tr('Ahora');
+    nowButton.setAttribute('aria-label', tr('Ir a la fecha y hora actuales'));
+    slider.setAttribute('aria-label', tr('Desplazamiento en horas respecto a la fecha base'));
+    backDay.textContent = tr('−1 día');
+    backDay.setAttribute('aria-label', tr('Retroceder un día'));
+    playButton.setAttribute('aria-label', tr('Reproducir o pausar la animación'));
+    forwardDay.textContent = tr('+1 día');
+    forwardDay.setAttribute('aria-label', tr('Avanzar un día'));
+    sunriseButton.textContent = tr('☀↑ Amanecer');
+    sunriseButton.setAttribute('aria-label', tr('Ir al siguiente amanecer'));
+    sunsetButton.textContent = tr('☀↓ Atardecer');
+    sunsetButton.setAttribute('aria-label', tr('Ir al siguiente atardecer'));
+    speedSelect.setAttribute('aria-label', tr('Velocidad de la animación'));
+    speedSelect.querySelectorAll<HTMLOptionElement>('option').forEach((option) => {
+      option.textContent = tr(option.dataset.label ?? '');
+    });
+    notice.textContent = '';
+    playButton.textContent = tr(playing ? '⏸ Pausar' : '▶ Reproducir');
+  };
 
   const syncUi = (): void => {
     if (document.activeElement !== dateInput) dateInput.value = toInputValue(date);
@@ -100,7 +123,7 @@ export function createTimeControls(
       hours = 0;
     }
     slider.value = String(Math.round(hours));
-    playButton.textContent = playing ? '⏸ Pausar' : '▶ Reproducir';
+    playButton.textContent = tr(playing ? '⏸ Pausar' : '▶ Reproducir');
     playButton.setAttribute('aria-pressed', String(playing));
   };
 
@@ -147,13 +170,19 @@ export function createTimeControls(
     } else {
       playing = false;
       syncUi();
-      notice.textContent = `No hay ${kind === 'sunrise' ? 'amanecer' : 'atardecer'} en los próximos 32 días en este sitio.`;
+      notice.textContent = tr(
+        kind === 'sunrise'
+          ? 'No hay amanecer en los próximos 32 días en este sitio.'
+          : 'No hay atardecer en los próximos 32 días en este sitio.',
+      );
     }
   };
   sunriseButton.addEventListener('click', () => jump('sunrise'));
   sunsetButton.addEventListener('click', () => jump('sunset'));
 
+  applyLang();
   syncUi();
+  const offLang = onLangChange(applyLang);
 
   return {
     element: panel,
@@ -166,6 +195,9 @@ export function createTimeControls(
       if (!playing) return;
       commit(new Date(date.getTime() + speedSeconds * deltaSeconds * 1000), false);
     },
-    dispose: () => panel.remove(),
+    dispose: () => {
+      offLang();
+      panel.remove();
+    },
   };
 }

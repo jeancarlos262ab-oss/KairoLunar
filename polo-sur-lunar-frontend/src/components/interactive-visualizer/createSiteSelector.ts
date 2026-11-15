@@ -1,11 +1,13 @@
 import {
-  CATEGORY_LABELS,
   CATEGORY_ORDER,
+  categoryLabel,
   describeSite,
   parseCustomSite,
+  siteLabel,
   type LandingSite,
   type SiteCategory,
 } from './sites';
+import { onLangChange, tr } from './i18n';
 import { element, makeButton } from './ui';
 
 export interface SiteSelectorOptions {
@@ -31,38 +33,30 @@ export function createSiteSelector(
 
   const panel = element('div', 'kv-panel kv-selector');
   panel.setAttribute('role', 'group');
-  panel.setAttribute('aria-label', 'Selección de sitio de aterrizaje');
 
   const label = element('label', 'kv-stack');
-  const labelText = element('span', 'kv-title', 'Sitio de aterrizaje');
+  const labelText = element('span', 'kv-title');
   const select = element('select', 'kv-field kv-wide');
-  select.setAttribute('aria-label', 'Sitio de aterrizaje');
   label.append(labelText, select);
 
   const details = element('div', 'kv-muted');
 
   const customBox = element('details', 'kv-sep');
-  const summary = element('summary', 'kv-summary', 'Coordenadas personalizadas');
+  const summary = element('summary', 'kv-summary');
   const customBody = element('div', 'kv-stack kv-custom-body');
 
   const latInput = element('input', 'kv-field kv-wide');
   latInput.type = 'text';
   latInput.inputMode = 'decimal';
-  latInput.placeholder = 'Latitud (−90 a 90), p. ej. −85.5';
-  latInput.setAttribute('aria-label', 'Latitud en grados');
 
   const lonInput = element('input', 'kv-field kv-wide');
   lonInput.type = 'text';
   lonInput.inputMode = 'decimal';
-  lonInput.placeholder = 'Longitud (−180 a 360), p. ej. 31.2';
-  lonInput.setAttribute('aria-label', 'Longitud este en grados');
 
   const nameInput = element('input', 'kv-field kv-wide');
   nameInput.type = 'text';
-  nameInput.placeholder = 'Nombre (opcional)';
-  nameInput.setAttribute('aria-label', 'Nombre del sitio personalizado');
 
-  const useButton = makeButton('Usar estas coordenadas', 'Usar las coordenadas ingresadas', 'kv-btn kv-wide');
+  const useButton = makeButton('', '', 'kv-btn kv-wide');
   const customError = element('div', 'kv-error');
   customError.setAttribute('aria-live', 'polite');
 
@@ -76,7 +70,7 @@ export function createSiteSelector(
     let group = groups.get(site.category);
     if (!group) {
       group = document.createElement('optgroup');
-      group.label = CATEGORY_LABELS[site.category];
+      group.label = categoryLabel(site.category);
       groups.set(site.category, group);
       const index = CATEGORY_ORDER.indexOf(site.category);
       const next = CATEGORY_ORDER.slice(index + 1)
@@ -87,11 +81,36 @@ export function createSiteSelector(
     }
     const option = document.createElement('option');
     option.value = site.id;
-    option.textContent = site.name;
+    option.textContent = siteLabel(site);
+    option.dataset.siteId = site.id;
     group.appendChild(option);
   };
 
   options.sites.forEach(addOption);
+
+  const applyLang = (): void => {
+    panel.setAttribute('aria-label', tr('Selección de sitio de aterrizaje'));
+    labelText.textContent = tr('Sitio de aterrizaje');
+    select.setAttribute('aria-label', tr('Sitio de aterrizaje'));
+    summary.textContent = tr('Coordenadas personalizadas');
+    latInput.placeholder = tr('Latitud (−90 a 90), p. ej. −85.5');
+    latInput.setAttribute('aria-label', tr('Latitud en grados'));
+    lonInput.placeholder = tr('Longitud (−180 a 360), p. ej. 31.2');
+    lonInput.setAttribute('aria-label', tr('Longitud este en grados'));
+    nameInput.placeholder = tr('Nombre (opcional)');
+    nameInput.setAttribute('aria-label', tr('Nombre del sitio personalizado'));
+    useButton.textContent = tr('Usar estas coordenadas');
+    useButton.setAttribute('aria-label', tr('Usar las coordenadas ingresadas'));
+    groups.forEach((group, category) => {
+      group.label = categoryLabel(category);
+    });
+    select.querySelectorAll<HTMLOptionElement>('option').forEach((option) => {
+      const site = siteMap.get(option.dataset.siteId ?? '');
+      if (site) option.textContent = siteLabel(site);
+    });
+    customError.textContent = '';
+    details.textContent = describeSite(current);
+  };
 
   const refreshDetails = (): void => {
     details.textContent = describeSite(current);
@@ -128,11 +147,16 @@ export function createSiteSelector(
   );
 
   setSite(current, false);
+  applyLang();
+  const offLang = onLangChange(applyLang);
 
   return {
     element: panel,
     getSite: () => current,
     setSite,
-    dispose: () => panel.remove(),
+    dispose: () => {
+      offLang();
+      panel.remove();
+    },
   };
 }

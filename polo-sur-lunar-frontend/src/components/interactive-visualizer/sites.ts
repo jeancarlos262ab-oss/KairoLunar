@@ -1,3 +1,5 @@
+import { getLang, tr } from './i18n';
+
 export type SiteCategory = 'commercial' | 'polar' | 'artemis' | 'custom';
 
 export interface LandingSite {
@@ -17,6 +19,10 @@ export const CATEGORY_LABELS: Record<SiteCategory, string> = {
   artemis: 'Artemis III (regiones candidatas)',
   custom: 'Personalizados',
 };
+
+export function categoryLabel(category: SiteCategory): string {
+  return tr(CATEGORY_LABELS[category]);
+}
 
 export const CATEGORY_ORDER: SiteCategory[] = ['polar', 'commercial', 'artemis', 'custom'];
 
@@ -38,15 +44,30 @@ export const SITES: LandingSite[] = [
 
 export function formatCoordinates(lat: number, lon: number): string {
   const ns = lat < 0 ? 'S' : 'N';
-  const ew = lon < 0 ? 'O' : 'E';
+  const ew = lon < 0 ? tr('O') : 'E';
   return `${Math.abs(lat).toFixed(2)}°${ns}, ${Math.abs(lon).toFixed(2)}°${ew}`;
 }
 
+function translateNote(note: string): string {
+  const whole = tr(note);
+  if (whole !== note) return whole;
+  return note
+    .replace(/^(centro de la región|centro de una región amplia)/, (match) => tr(match))
+    .replace(/(\d) (\d{3})/g, (match, a: string, b: string) => (getLang() === 'en' ? `${a},${b}` : match));
+}
+
+export function siteLabel(site: { name: string; lat: number; lon: number; category?: SiteCategory }): string {
+  if (site.category === 'custom' && /^Personalizado \(/.test(site.name)) {
+    return `${tr('Personalizado')} (${formatCoordinates(site.lat, site.lon)})`;
+  }
+  return tr(site.name);
+}
+
 export function describeSite(site: LandingSite): string {
-  const parts = [formatCoordinates(site.lat, site.lon), site.agency];
+  const parts = [formatCoordinates(site.lat, site.lon), tr(site.agency)];
   if (site.year) parts.push(String(site.year));
   const base = parts.join(' · ');
-  return site.note ? `${base} (${site.note})` : base;
+  return site.note ? `${base} (${translateNote(site.note)})` : base;
 }
 
 export interface CustomSiteResult {
@@ -58,19 +79,19 @@ export function parseCustomSite(latText: string, lonText: string, nameText: stri
   const latRaw = latText.trim().replace(',', '.');
   const lonRaw = lonText.trim().replace(',', '.');
   if (latRaw === '' || lonRaw === '') {
-    return { site: null, error: 'Ingresa latitud y longitud.' };
+    return { site: null, error: tr('Ingresa latitud y longitud.') };
   }
 
   const lat = Number(latRaw);
   const lonInput = Number(lonRaw);
   if (!Number.isFinite(lat) || !Number.isFinite(lonInput)) {
-    return { site: null, error: 'Latitud y longitud deben ser números.' };
+    return { site: null, error: tr('Latitud y longitud deben ser números.') };
   }
   if (lat < -90 || lat > 90) {
-    return { site: null, error: 'La latitud debe estar entre −90° y 90°.' };
+    return { site: null, error: tr('La latitud debe estar entre −90° y 90°.') };
   }
   if (lonInput < -180 || lonInput > 360) {
-    return { site: null, error: 'La longitud debe estar entre −180° y 360°.' };
+    return { site: null, error: tr('La longitud debe estar entre −180° y 360°.') };
   }
 
   const lon = lonInput > 180 ? lonInput - 360 : lonInput;

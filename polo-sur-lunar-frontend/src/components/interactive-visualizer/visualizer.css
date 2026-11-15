@@ -69,6 +69,13 @@
 .kv .kv-check input { accent-color: #fff; }
 .kv .kv-nav { display: flex; gap: 10px; }
 
+.kv .kv-mode { position: absolute; top: 58px; right: 14px; z-index: 40; display: flex; border: 1px solid #444; height: 26px; background: rgba(0,0,0,.6); }
+.kv .kv-mode-btn { padding: 0 14px; font: 8px 'Michroma', sans-serif; letter-spacing: .08em; text-transform: uppercase; color: #ccc; }
+.kv .kv-mode-btn:hover { color: #fff; }
+.kv .kv-mode-btn[aria-pressed='true'] { background: #fff; color: #000; }
+
+.kv.basic .kv-expert { display: none; }
+
 @media (max-width: 760px) {
   .kv .kv-mission { max-width: 40%; }
   .kv .kv-sky { width: 220px; }

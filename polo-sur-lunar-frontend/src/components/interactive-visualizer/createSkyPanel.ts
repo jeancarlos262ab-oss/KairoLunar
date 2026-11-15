@@ -5,8 +5,9 @@ import {
   type HorizonFn,
 } from './lunarEphemeris';
 import { makeHorizonFn, type HorizonProfile } from './data/loadLunarData';
+import { onLangChange, tr } from './i18n';
 import { element } from './ui';
-import type { SiteCategory } from './sites';
+import { siteLabel, type SiteCategory } from './sites';
 
 export interface SkySite {
   name: string;
@@ -66,12 +67,12 @@ export function formatRemaining(ms: number): string {
 }
 
 function describeHorizon(profile: HorizonProfile | null, site: SkySite): string {
-  if (!profile) return 'Horizonte esférico (sin datos LOLA para este sitio)';
+  if (!profile) return tr('Horizonte esférico (sin datos LOLA para este sitio)');
   const radiusKm = Math.round(profile.maxRadiusM / 1000);
-  const source = site.category === 'artemis' ? 'Artemis III (centro de la región)' : 'LOLA';
-  const base = `Horizonte ${source} · radio ${radiusKm} km`;
+  const source = site.category === 'artemis' ? tr('Artemis III (centro de la región)') : 'LOLA';
+  const base = `${tr('Horizonte')} ${source} · ${tr('radio')} ${radiusKm} km`;
   if (profile.minReachKm < radiusKm * 0.5) {
-    return `${base} · ⚠ cobertura parcial (≥ ${profile.minReachKm.toFixed(1)} km)`;
+    return `${base} · ⚠ ${tr('cobertura parcial')} (≥ ${profile.minReachKm.toFixed(1)} km)`;
   }
   return base;
 }
@@ -81,7 +82,6 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
 
   const panel = element('div', 'kv-panel kv-sky');
   panel.setAttribute('role', 'region');
-  panel.setAttribute('aria-label', 'Posición del Sol y de la Tierra sobre el horizonte');
 
   const title = element('div', 'kv-title');
 
@@ -92,29 +92,26 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
   canvas.width = CHART_SIZE * dpr;
   canvas.height = CHART_SIZE * dpr;
   canvas.setAttribute('role', 'img');
-  canvas.setAttribute(
-    'aria-label',
-    'Diagrama del cielo visto desde arriba: el centro es el cenit, el borde es el horizonte, el norte arriba y el este a la derecha. La zona gris es el relieve que tapa el cielo.',
-  );
   const ctx = canvas.getContext('2d');
 
-  const buildRow = (body: Body, label: string): { root: HTMLElement; row: BodyRow } => {
+  const buildRow = (body: Body): { root: HTMLElement; row: BodyRow; headText: Text } => {
     const root = element('div', 'kv-body');
     const head = element('div', 'kv-body-head');
     const dot = element('span', 'kv-dot');
     dot.style.background = COLORS[body];
-    head.append(dot, document.createTextNode(label));
-    const values = element('div', 'kv-muted');
+    const headText = document.createTextNode('');
+    head.append(dot, headText);
+    const values = element('div', 'kv-muted kv-expert');
     const countdown = element('div', 'kv-countdown');
     countdown.style.color = COLORS[body];
     const status = element('div', 'kv-muted');
     root.append(head, values, countdown, status);
-    return { root, row: { values, countdown, status } };
+    return { root, row: { values, countdown, status }, headText };
   };
 
-  const sunBuilt = buildRow('sun', 'Sol');
-  const earthBuilt = buildRow('earth', 'Tierra');
-  const note = element('div', 'kv-muted kv-sep kv-note');
+  const sunBuilt = buildRow('sun');
+  const earthBuilt = buildRow('earth');
+  const note = element('div', 'kv-muted kv-sep kv-note kv-expert');
   panel.append(title, canvas, sunBuilt.root, earthBuilt.root, note);
   container.appendChild(panel);
 
@@ -282,7 +279,7 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     ctx.fillText('N', c, c - CHART_RADIUS - 8);
     ctx.fillText('S', c, c + CHART_RADIUS + 8);
     ctx.fillText('E', c + CHART_RADIUS + 8, c);
-    ctx.fillText('O', c - CHART_RADIUS - 8, c);
+    ctx.fillText(tr('O'), c - CHART_RADIUS - 8, c);
     ctx.fillStyle = 'rgba(255,255,255,0.45)';
     ctx.font = `9px ${CHART_FONT}`;
     ctx.fillText('30°', c + 3, c - ((90 - 30) / 90) * CHART_RADIUS + 8);
@@ -304,33 +301,32 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     horizon: HorizonFn,
   ): void => {
     const cd = getCountdown(body, date, site, profile, horizon);
-    const name = body === 'sun' ? 'Sol' : 'Tierra';
-    const horizonText = profile ? ` · Horizonte ${horizon(h.azimuth).toFixed(1)}°` : '';
-    row.values.textContent = `Elevación ${h.elevation.toFixed(1)}° · Azimut ${h.azimuth.toFixed(0)}°${horizonText}`;
+    const name = tr(body === 'sun' ? 'Sol' : 'Tierra');
+    const horizonText = profile ? ` · ${tr('Horizonte')} ${horizon(h.azimuth).toFixed(1)}°` : '';
+    row.values.textContent = `${tr('Elevación')} ${h.elevation.toFixed(1)}° · ${tr('Azimut')} ${h.azimuth.toFixed(0)}°${horizonText}`;
 
     if (cd.next) {
       const remaining = formatRemaining(cd.next.getTime() - date.getTime());
-      const label =
+      const label = tr(
         body === 'sun'
           ? cd.visible
             ? 'Puesta de Sol en'
             : 'Amanecer en'
           : cd.visible
             ? 'Puesta de la Tierra en'
-            : 'Salida de la Tierra en';
+            : 'Salida de la Tierra en',
+      );
       row.countdown.textContent = `${label} ${remaining}`;
     } else {
-      row.countdown.textContent = cd.visible
-        ? `${name} sobre el horizonte ≥ ${SEARCH_DAYS} d`
-        : `${name} bajo el horizonte ≥ ${SEARCH_DAYS} d`;
+      row.countdown.textContent = `${name} ${tr(cd.visible ? 'sobre el horizonte' : 'bajo el horizonte')} ≥ ${SEARCH_DAYS} d`;
     }
 
     if (body === 'sun') {
-      row.status.textContent = cd.visible ? 'Generación solar posible' : 'Sin generación solar';
+      row.status.textContent = tr(cd.visible ? 'Generación solar posible' : 'Sin generación solar');
     } else {
-      row.status.textContent = cd.visible
-        ? 'Línea de vista directa a la Tierra'
-        : 'Sin línea de vista a la Tierra';
+      row.status.textContent = tr(
+        cd.visible ? 'Línea de vista directa a la Tierra' : 'Sin línea de vista a la Tierra',
+      );
     }
   };
 
@@ -342,7 +338,16 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     const site = options.getSite();
     const profile = options.getHorizon ? options.getHorizon() : null;
     const horizon = makeHorizonFn(profile);
-    title.textContent = `Cielo en ${site.name}`;
+    panel.setAttribute('aria-label', tr('Posición del Sol y de la Tierra sobre el horizonte'));
+    canvas.setAttribute(
+      'aria-label',
+      tr(
+        'Diagrama del cielo visto desde arriba: el centro es el cenit, el borde es el horizonte, el norte arriba y el este a la derecha. La zona gris es el relieve que tapa el cielo.',
+      ),
+    );
+    sunBuilt.headText.textContent = tr('Sol');
+    earthBuilt.headText.textContent = tr('Tierra');
+    title.textContent = `${tr('Cielo en')} ${siteLabel(site)}`;
     const sun = getBodyHorizontal(date, 'sun', site.lat, site.lon);
     const earth = getBodyHorizontal(date, 'earth', site.lat, site.lon);
     drawChart(date, site, sun, earth, profile, horizon);
@@ -350,6 +355,10 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     fillRow(earthBuilt.row, 'earth', date, site, earth, profile, horizon);
     note.textContent = describeHorizon(profile, site);
   };
+
+  const offLang = onLangChange(() => {
+    if (lastDate) update(lastDate);
+  });
 
   if (document.fonts) {
     void document.fonts.ready.then(() => {
@@ -362,6 +371,7 @@ export function createSkyPanel(container: HTMLElement, options: SkyPanelOptions)
     update,
     dispose: () => {
       disposed = true;
+      offLang();
       panel.remove();
     },
   };
