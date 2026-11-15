@@ -235,7 +235,7 @@ function writeStored(lang: Lang): void {
   }
 }
 
-let current: Lang = readStored() ?? 'es';
+let current: Lang = readStored() ?? 'en';
 let currentMode: Mode = readStoredMode() ?? 'basic';
 const listeners = new Set<Listener>();
 
