@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { samplePatch, type TerrainPatch } from '../data/loadLunarData';
 
 export interface LandOptions {
   size?: number;
@@ -26,6 +27,7 @@ export interface LandResult {
   mesh: THREE.Mesh;
   controls: OrbitControls;
   regenerate: (seed?: number) => number;
+  setTerrain: (patch: TerrainPatch, verticalScale?: number) => void;
   update: () => void;
   dispose: () => void;
 }
@@ -151,6 +153,13 @@ export function createLand(
   const position = geometry.attributes.position as THREE.BufferAttribute;
   const amplitude = size * heightScale;
 
+  const finish = (): void => {
+    position.needsUpdate = true;
+    geometry.computeVertexNormals();
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+  };
+
   const build = (terrainSeed: number): void => {
     const rng = createRng(terrainSeed);
     const craters = generateCraters(craterCount, size, rng, options.clearZone);
@@ -168,10 +177,7 @@ export function createLand(
       position.setY(i, h);
     }
 
-    position.needsUpdate = true;
-    geometry.computeVertexNormals();
-    geometry.computeBoundingBox();
-    geometry.computeBoundingSphere();
+    finish();
   };
 
   build(seed);
@@ -200,10 +206,26 @@ export function createLand(
     return used;
   };
 
+  const setTerrain = (patch: TerrainPatch, verticalScale = 1): void => {
+    const unitsPerMeter = size / patch.extentM;
+    const last = patch.size - 1;
+
+    for (let i = 0; i < position.count; i++) {
+      const x = position.getX(i);
+      const z = position.getZ(i);
+      const col = (x / size + 0.5) * last;
+      const row = (z / size + 0.5) * last;
+      position.setY(i, samplePatch(patch, col, row) * unitsPerMeter * verticalScale);
+    }
+
+    finish();
+  };
+
   return {
     mesh,
     controls,
     regenerate,
+    setTerrain,
     update: () => controls.update(),
     dispose: () => {
       controls.dispose();

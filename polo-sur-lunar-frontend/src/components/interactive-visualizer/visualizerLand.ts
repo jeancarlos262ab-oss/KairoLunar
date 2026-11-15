@@ -7,6 +7,7 @@ import { createLunarModule } from './scene/createLunarModule';
 import { createTimeControls } from './scene/createTimeControls';
 import { createSiteSelector } from './createSiteSelector';
 import { createSkyPanel } from './createSkyPanel';
+import { loadSiteData, makeHorizonFn, type HorizonProfile } from './data/loadLunarData';
 import { SITES, type LandingSite } from './sites';
 import {
   findNextSunEvent,
@@ -27,6 +28,7 @@ export interface VisualizerOptions {
   sun?: SunOptions;
   earth?: EarthOptions;
   stars?: StarsOptions;
+  terrainExaggeration?: number;
   camera?: {
     fov?: number;
     near?: number;
@@ -47,6 +49,7 @@ export interface VisualizerResult {
 const DEFAULTS = {
   siteId: 'shackleton',
   landing: { x: 10, z: -15, color: 0xff3b30 },
+  terrainExaggeration: 1,
   camera: { fov: 50, near: 0.1, far: 5000, position: [0, 40, 80] as [number, number, number] },
 };
 
@@ -113,9 +116,11 @@ export function createVisualizer(
 ): VisualizerResult {
   const landing = { ...DEFAULTS.landing, ...options.landing };
   const cameraConfig = { ...DEFAULTS.camera, ...options.camera };
+  const exaggeration = options.terrainExaggeration ?? DEFAULTS.terrainExaggeration;
   const startDate = options.startDate ?? new Date();
   let currentSite: LandingSite =
     SITES.find((site) => site.id === (options.siteId ?? DEFAULTS.siteId)) ?? SITES[0];
+  let currentHorizon: HorizonProfile | null = null;
 
   const previousPosition = container.style.position;
   const previousBackground = container.style.background;
@@ -165,24 +170,61 @@ export function createVisualizer(
   button.addEventListener('click', onToggle);
   container.appendChild(button);
 
+  let terrainToken = 0;
+  let disposed = false;
+
   const applyDate = (date: Date): void => {
+    const horizon = makeHorizonFn(currentHorizon);
     const h = getSunHorizontal(date, currentSite.lat, currentSite.lon);
-    sun.setHorizontal(h.azimuth, h.elevation);
+    const sunHorizon = horizon(h.azimuth);
+    sun.setHorizontal(h.azimuth, h.elevation, sunHorizon);
     const e = getEarthHorizontal(date, currentSite.lat, currentSite.lon);
-    earth.setHorizontal(e.azimuth, e.elevation);
+    earth.setHorizontal(e.azimuth, e.elevation, horizon(e.azimuth));
     earth.setSunDirection(h.azimuth, h.elevation);
     earth.setDate(date);
-    const state = h.elevation > 0 ? 'Sol sobre el horizonte' : 'Sol bajo el horizonte';
+    const state = h.elevation > sunHorizon ? 'Sol sobre el horizonte' : 'Sol bajo el horizonte';
+    const horizonText = currentHorizon ? `  ·  Horizonte ${sunHorizon.toFixed(1)}°` : '';
     timeControls.setInfo(
-      `${currentSite.name}  ·  ${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
+      `${currentSite.name}  ·  ${formatUtc(date)}  ·  Elevación solar ${h.elevation.toFixed(1)}°  ·  Azimut ${h.azimuth.toFixed(0)}°${horizonText}  ·  ${state}  ·  Edad lunar ${getMoonAgeDays(date).toFixed(1)} d`,
     );
     skyPanel.update(date);
+  };
+
+  const applySiteData = async (site: LandingSite, regenerateIfMissing: boolean): Promise<void> => {
+    terrainToken += 1;
+    const token = terrainToken;
+    const data = await loadSiteData(site.id);
+    if (disposed || token !== terrainToken) return;
+
+    currentHorizon = data.horizon;
+    applyDate(timeControls.getDate());
+
+    if (data.terrain) {
+      land.setTerrain(data.terrain, exaggeration);
+      lander.setPosition(0, 0);
+    } else if (regenerateIfMissing) {
+      land.regenerate();
+      lander.setPosition(landing.x, landing.z);
+    } else {
+      return;
+    }
+
+    lander.setVisible(true);
+    button.paint(true);
   };
 
   const timeControls = createTimeControls(container, {
     initialDate: startDate,
     onChange: applyDate,
-    findEvent: (kind, from) => findNextSunEvent(from, kind, currentSite.lat, currentSite.lon),
+    findEvent: (kind, from) =>
+      findNextSunEvent(
+        from,
+        kind,
+        currentSite.lat,
+        currentSite.lon,
+        32,
+        makeHorizonFn(currentHorizon),
+      ),
   });
 
   const selector = createSiteSelector(container, {
@@ -190,20 +232,20 @@ export function createVisualizer(
     initialSiteId: currentSite.id,
     onSelect: (site) => {
       currentSite = site;
+      currentHorizon = null;
       button.setLabel(site.name);
-      land.regenerate();
-      lander.setPosition(landing.x, landing.z);
-      lander.setVisible(true);
-      button.paint(true);
+      void applySiteData(site, true);
       applyDate(timeControls.getDate());
     },
   });
 
   const skyPanel = createSkyPanel(container, {
     getSite: () => currentSite,
+    getHorizon: () => currentHorizon,
   });
 
   applyDate(startDate);
+  void applySiteData(currentSite, false);
 
   const resize = (): void => {
     const w = Math.max(container.clientWidth, 1);
@@ -228,6 +270,7 @@ export function createVisualizer(
   });
 
   const dispose = (): void => {
+    disposed = true;
     renderer.setAnimationLoop(null);
     observer.disconnect();
     button.removeEventListener('click', onToggle);
