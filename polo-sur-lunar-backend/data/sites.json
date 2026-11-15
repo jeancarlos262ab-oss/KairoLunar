@@ -2,7 +2,7 @@
   { "id": "shackleton", "name": "Shackleton (borde)", "lat": -89.76, "lon": 203.58 },
   { "id": "south-pole", "name": "Polo sur geográfico", "lat": -90, "lon": 0 },
   { "id": "im2", "name": "IM-2 Athena (Mons Mouton)", "lat": -84.79, "lon": 29.2 },
-  { "id": "im1", "name": "IM-1 Odysseus (Malapert A)", "lat": -80.13, "lon": 1.44 }
+  { "id": "im1", "name": "IM-1 Odysseus (Malapert A)", "lat": -80.13, "lon": 1.44 },
   { "id": "im1", "name": "IM-1 Odysseus (Malapert A)", "lat": -80.13, "lon": 1.44 },
   {"id": "nobile-rim-2", "name": "Artemis III - Nobile Rim 2", "lat": -83.9657, "lon": 57.9499},
   {"id": "mons-mouton", "name": "Artemis III - Mons Mouton", "lat": -85.4006, "lon": 30.8514},
